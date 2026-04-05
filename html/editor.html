@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editor Visual — GrapesJS</title>
+  <!-- GrapesJS CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.13/dist/css/grapes.min.css" />
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; }
+    .gjs-cv-canvas { top: 0; width: 100%; height: 100%; }
+    /* Dark theme overrides */
+    .gjs-one-bg    { background-color: #1a1a2e; }
+    .gjs-two-color { color: #e0e0e0; }
+    .gjs-three-bg  { background-color: #16213e; }
+    .gjs-four-color, .gjs-four-color-h:hover { color: #00d4ff; }
+    #gjs { border: none; }
+    /* Top bar */
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px; background: #0f3460; color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .top-bar h3 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: .5px; }
+    .top-bar button {
+      padding: 6px 16px; border: none; border-radius: 6px; cursor: pointer;
+      font-size: 13px; font-weight: 600; margin-left: 8px;
+    }
+    .btn-save   { background: #30d158; color: #000; }
+    .btn-clear  { background: #ff453a; color: #fff; }
+    .btn-view   { background: #2997ff; color: #fff; }
+    .btn-import { background: #bf5af2; color: #fff; }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h3>✏️ GrapesJS — Editor Visual de Slides</h3>
+  <div>
+    <button class="btn-import" onclick="importarSlides()">📥 Importar Slides (index.html)</button>
+    <button class="btn-save"   onclick="salvar()">💾 Salvar HTML</button>
+    <button class="btn-view"   onclick="window.open('index.html','_blank')">▶️ Ver Apresentação</button>
+    <button class="btn-clear"  onclick="editor.DomComponents.clear()">🗑️ Limpar Tudo</button>
+  </div>
+</div>
+
+<div id="gjs"></div>
+
+<!-- GrapesJS JS -->
+<script src="https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.js"></script>
+<!-- Preset Webpage plugin -->
+<script src="https://unpkg.com/grapesjs-preset-webpage@1.0.3/dist/index.js"></script>
+<!-- Blocks Basic plugin -->
+<script src="https://unpkg.com/grapesjs-blocks-basic@1.0.2/dist/index.js"></script>
+
+<script>
+// --------------- INICIALIZAR GRAPESJS ---------------
+const editor = grapesjs.init({
+  container: '#gjs',
+  height: 'calc(100vh - 44px)',
+  width: 'auto',
+  storageManager: {
+    type: 'local',
+    autosave: true,
+    autoload: true,
+    stepsBeforeSave: 5,
+    id: 'gjs-einindi-'
+  },
+  plugins: ['gjs-preset-webpage', 'gjs-blocks-basic'],
+  pluginsOpts: {
+    'gjs-preset-webpage': {},
+    'gjs-blocks-basic': {}
+  },
+  canvas: {
+    styles: [
+      'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'
+    ]
+  },
+  // Default CSS inside canvas
+  style: `
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #0b1120; color: #f5f5f7; margin: 0; padding: 20px;
+    }
+    .slide-section {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 40px 50px;
+      margin-bottom: 24px; min-height: 400px;
+    }
+    .slide-title {
+      font-size: 38px; font-weight: 700; margin-bottom: 12px;
+      background: linear-gradient(135deg, #f5f5f7, rgba(245,245,247,0.75));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .slide-subtitle { font-size: 18px; color: rgba(245,245,247,0.7); margin-bottom: 20px; }
+    .card-box {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 20px;
+    }
+    .two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .highlight-blue  { color: #2997ff; } .highlight-green  { color: #30d158; }
+    .highlight-orange { color: #ff9f0a; } .highlight-red    { color: #ff453a; }
+    .highlight-teal   { color: #64d2ff; } .highlight-purple { color: #bf5af2; }
+    .code-block {
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px; padding: 16px; font-family: 'Fira Code', monospace;
+      font-size: 13px; white-space: pre-wrap;
+    }
+  `
+});
+
+// --------------- BLOCOS PERSONALIZADOS ---------------
+const bm = editor.BlockManager;
+
+bm.add('slide-section', {
+  label: '📄 Slide',
+  category: 'Slides',
+  content: `<section class="slide-section">
+    <h1 class="slide-title">Título do Slide</h1>
+    <p class="slide-subtitle">Subtítulo ou descrição</p>
+    <div>Conteúdo aqui...</div>
+  </section>`
+});
+
+bm.add('two-columns', {
+  label: '🔲 2 Colunas',
+  category: 'Slides',
+  content: `<div class="two-columns">
+    <div class="card-box"><p>Coluna esquerda</p></div>
+    <div class="card-box"><p>Coluna direita</p></div>
+  </div>`
+});
+
+bm.add('card-box', {
+  label: '🃏 Card',
+  category: 'Slides',
+  content: `<div class="card-box"><h3>Título</h3><p>Conteúdo do card</p></div>`
+});
+
+bm.add('code-block', {
+  label: '💻 Código',
+  category: 'Slides',
+  content: `<div class="code-block">import math\nprint("Hello")</div>`
+});
+
+bm.add('formula-box', {
+  label: '📐 Fórmula',
+  category: 'Slides',
+  content: `<div style="text-align:center;padding:16px 24px;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.15);border-radius:10px;font-size:18px;font-weight:600;color:#64d2ff;letter-spacing:1px">V = I × R</div>`
+});
+
+bm.add('info-panel', {
+  label: 'ℹ️ Painel Info',
+  category: 'Slides',
+  content: `<div class="card-box" style="border-left:4px solid #2997ff">
+    <h4 style="color:#2997ff;margin-bottom:8px">INFORMAÇÃO</h4>
+    <ul><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>
+  </div>`
+});
+
+bm.add('warning-note', {
+  label: '⚠️ Alerta',
+  category: 'Slides',
+  content: `<div style="display:flex;align-items:center;gap:10px;padding:12px 20px;background:rgba(255,69,58,0.08);border:1px solid rgba(255,69,58,0.2);border-radius:10px;color:#ff453a;font-size:14px">
+    <span style="font-size:18px">⚠️</span><span>Atenção: informação importante aqui.</span>
+  </div>`
+});
+
+// --------------- FUNÇÕES DOS BOTÕES ---------------
+
+// Salvar HTML como download
+function salvar() {
+  const html = editor.getHtml();
+  const css  = editor.getCss();
+  const full = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Slides - Exportado do GrapesJS</title>
+<style>${css}</style></head>
+<body>${html}</body></html>`;
+  const blob = new Blob([full], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'slides_exportados.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  alert('✅ HTML salvo como slides_exportados.html');
+}
+
+// Importar conteúdo do index.html para o editor
+async function importarSlides() {
+  try {
+    const resp = await fetch('index.html');
+    if (!resp.ok) throw new Error('Não foi possível carregar index.html');
+    const text = await resp.text();
+    // Extract body content
+    const match = text.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const bodyContent = match ? match[1] : text;
+    // Remove script tags
+    const clean = bodyContent.replace(/<script[\s\S]*?<\/script>/gi, '');
+    editor.setComponents(clean);
+    // Extract style
+    const styleMatch = text.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+    if (styleMatch) {
+      editor.setStyle(styleMatch[1]);
+    }
+    alert('✅ Slides importados do index.html! Agora você pode editá-los visualmente.');
+  } catch(e) {
+    alert('❌ Erro ao importar: ' + e.message + '\n\nCertifique-se de abrir via um servidor local (Live Server).');
+  }
+}
+</script>
+</body>
+</html>

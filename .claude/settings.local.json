@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"c:\\\\Users\\\\admin\\\\OneDrive - Universidade Federal de Uberlândia\\\\Josue\\\\02 AulasUFU\\\\01 Aulas_ININD1\\\\Quintas\\\\EININDI02_Projetos_Engenharia_Pyhton\" -type f -exec ls -lh {} \\\\;)",
+      "Read(//c/Users/admin/OneDrive - Universidade Federal de Uberlândia/Josue/02 AulasUFU/01 Aulas_ININD1/Quintas/EININDI02_Projetos_Engenharia_Pyhton/{print $5 \"/**)",
+      "Bash(find . -type f ! -path \"./.git/*\" ! -path \"./.github/*\" -exec basename {} \\\\;)",
+      "Bash(sed 's/.*\\\\.//')",
+      "Bash(flutter --version)",
+      "Bash(flutter create:*)",
+      "Bash(mkdir -p \"/c/Users/admin/OneDrive - Universidade Federal de Uberlândia/Josue/02 AulasUFU/01 Aulas_ININD1/Quintas/EININDI02_Projetos_Engenharia_Pyhton/flutter_slides/assets\")",
+      "Bash(cp \"/c/Users/admin/OneDrive - Universidade Federal de Uberlândia/Josue/02 AulasUFU/01 Aulas_ININD1/Quintas/EININDI02_Projetos_Engenharia_Pyhton/assets/pdf_slide_\"*.png \"/c/Users/admin/OneDrive - Universidade Federal de Uberlândia/Josue/02 AulasUFU/01 Aulas_ININD1/Quintas/EININDI02_Projetos_Engenharia_Pyhton/flutter_slides/assets/\")"
+    ]
+  }
+}
