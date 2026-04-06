@@ -64,7 +64,7 @@ class PresentationScreen extends StatefulWidget {
 // Ordem: 0=Slide01, 1=Slide17(Python-cos/sin), 2=Slide02, 3=Slide03, ...
 int _maxSubStep(int slide) {
   const steps = {
-    1: 5, // Cadeia de Medição  (era slide 2, agora index 2)
+    1: 5, // Cadeia de Medição
     2: 3, // Contexto do Problema
     3: 3, // Formulação do Problema
     4: 2, // Esquemático
@@ -554,9 +554,8 @@ class _SlideFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Slide 1 = capa, Slide 2 = Python cos/sin (Slide17), depois restantes
     if (slideIndex == 0) return const Slide01();
-    if (slideIndex == 1) return const Slide02(); // Python cos/sin
+    if (slideIndex == 1) return Slide02(step: subStep);
     if (slideIndex == 2) return Slide03(step: subStep);
     if (slideIndex == 3) return Slide04(step: subStep);
     if (slideIndex == 4) return Slide05(step: subStep);
@@ -570,8 +569,8 @@ class _SlideFrame extends StatelessWidget {
     if (slideIndex == 12) return Slide13(step: subStep);
     if (slideIndex == 13) return Slide14(step: subStep);
     if (slideIndex == 14) return Slide15(step: subStep);
-    if (slideIndex == 15) return Slide16();
-    if (slideIndex == 16) return const Slide17();
+    if (slideIndex == 15) return const Slide16();
+    if (slideIndex == 16) return const Slide17(); // Python interativo (último)
 
     final path =
         'assets/pdf_slide_${(slideIndex + 1).toString().padLeft(2, '0')}.png';
