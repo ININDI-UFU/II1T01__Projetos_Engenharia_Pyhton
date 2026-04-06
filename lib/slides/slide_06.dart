@@ -1,15 +1,13 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_math_fork/flutter_math.dart';
 
-class Slide06 extends StatefulWidget {
+class Slide05 extends StatefulWidget {
   final int step;
-  const Slide06({super.key, required this.step});
+  const Slide05({super.key, this.step = 0});
   @override
-  State<Slide06> createState() => _Slide06State();
+  State<Slide05> createState() => _Slide05State();
 }
 
-class _Slide06State extends State<Slide06> with SingleTickerProviderStateMixin {
+class _Slide05State extends State<Slide05> with TickerProviderStateMixin {
   late final AnimationController _entry;
 
   @override
@@ -29,33 +27,32 @@ class _Slide06State extends State<Slide06> with SingleTickerProviderStateMixin {
 
   Animation<double> _iv(double a, double b) => CurvedAnimation(
     parent: _entry,
-    curve: Interval(a, b, curve: Curves.easeOut),
+    curve: Interval(a, b, curve: Curves.easeOutCubic),
   );
 
   Widget _fade(
-    Animation<double> anim, {
-    double dy = 24,
+    Animation<double> a, {
+    required double dy,
     required Widget child,
-  }) {
-    return AnimatedBuilder(
-      animation: anim,
-      builder: (context, _) => Opacity(
-        opacity: anim.value,
-        child: Transform.translate(
-          offset: Offset(0, dy * (1 - anim.value)),
-          child: child,
-        ),
+  }) => AnimatedBuilder(
+    animation: a,
+    builder: (context, _) => Opacity(
+      opacity: a.value.clamp(0.0, 1.0),
+      child: Transform.translate(
+        offset: Offset(0, dy * (1 - a.value)),
+        child: child,
       ),
-    );
-  }
+    ),
+  );
 
-  Widget _reveal(bool visible, Widget child) {
+  Widget _reveal(int threshold, Widget child) {
+    final visible = widget.step >= threshold;
     return AnimatedOpacity(
       opacity: visible ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeOut,
       child: AnimatedScale(
-        scale: visible ? 1.0 : 0.90,
+        scale: visible ? 1.0 : 0.75,
         duration: const Duration(milliseconds: 420),
         curve: Curves.easeOutBack,
         child: child,
@@ -63,180 +60,30 @@ class _Slide06State extends State<Slide06> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _card({
-    required double s,
-    required bool visible,
-    required String badgeNum,
-    required Color labelColor,
-    required String label,
-    required String desc,
-    required String formula,
-    String? desc2,
-    String? formula2,
-    String? additional,
-    Color? additionalColor,
-  }) {
-    return _reveal(
-      visible,
-      Container(
-        margin: EdgeInsets.all(4 * s),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0B1929),
-          borderRadius: BorderRadius.circular(10 * s),
-          border: Border.all(
-            color: const Color(0xFF1E3854).withValues(alpha: 0.5),
-            width: 1,
-          ),
-        ),
-        padding: EdgeInsets.all(12 * s),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 24 * s,
-                  height: 24 * s,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF2997FF),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    badgeNum,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11 * s,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 8 * s),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      color: labelColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10 * s,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8 * s),
-            Text(
-              desc,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 10 * s,
-                height: 1.4,
-              ),
-            ),
-            SizedBox(height: 8 * s),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: 12 * s,
-                vertical: 6 * s,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(0x330A1E38),
-                borderRadius: BorderRadius.circular(6 * s),
-                border: Border.all(
-                  color: const Color(0xFF00BCD4).withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Center(
-                child: Math.tex(
-                  formula,
-                  textStyle: TextStyle(
-                    color: const Color(0xFF00BCD4),
-                    fontSize: 13 * s,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            if (desc2 != null) ...[
-              SizedBox(height: 6 * s),
-              Text(
-                desc2,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 10 * s,
-                  height: 1.4,
-                ),
-              ),
-            ],
-            if (formula2 != null) ...[
-              SizedBox(height: 6 * s),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 12 * s,
-                  vertical: 6 * s,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0x330A1E38),
-                  borderRadius: BorderRadius.circular(6 * s),
-                  border: Border.all(
-                    color: const Color(0xFF00BCD4).withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Center(
-                  child: Math.tex(
-                    formula2,
-                    textStyle: TextStyle(
-                      color: const Color(0xFF00BCD4),
-                      fontSize: 13 * s,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            if (additional != null) ...[
-              SizedBox(height: 6 * s),
-              Text(
-                additional,
-                style: TextStyle(
-                  color: additionalColor ?? Colors.white.withValues(alpha: 0.7),
-                  fontSize: 9.5 * s,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    // ignore: unused_local_variable
-    final _ = sqrt(2); // dart:math used
-    final titleA = _iv(0.0, 0.5);
-    final subA = _iv(0.1, 0.6);
+    final titleA = _iv(0.00, 0.40);
+    final step = widget.step;
 
     return LayoutBuilder(
       builder: (context, box) {
         final s = (box.maxWidth / 960).clamp(0.25, 2.5);
+
         return DecoratedBox(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [Color(0xFF0C1B30), Color(0xFF071320), Color(0xFF040D18)],
+              stops: [0.0, 0.55, 1.0],
             ),
           ),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              CustomPaint(painter: _DotGrid(s: s)),
+              Positioned.fill(
+                child: CustomPaint(painter: _DotGrid(s: s)),
+              ),
               Padding(
                 padding: EdgeInsets.fromLTRB(36 * s, 28 * s, 36 * s, 16 * s),
                 child: Column(
@@ -244,102 +91,19 @@ class _Slide06State extends State<Slide06> with SingleTickerProviderStateMixin {
                   children: [
                     _fade(
                       titleA,
+                      dy: -20.0 * s,
                       child: Text(
-                        'Derivação Matemática do Circuito',
+                        'Esquemático do Circuito Condicionador',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 26 * s,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
+                          fontSize: 36 * s,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.4,
                         ),
                       ),
                     ),
-                    _fade(subA, child: const SizedBox.shrink()),
-                    SizedBox(height: 12 * s),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: _card(
-                                    s: s,
-                                    visible: widget.step >= 1,
-                                    badgeNum: '1',
-                                    labelColor: Colors.orange,
-                                    label: 'ETAPA 1: CONVERSÃO RMS → PICO',
-                                    desc:
-                                        'O valor RMS é o valor eficaz da tensão CA senoidal. Para obter o valor de pico:',
-                                    formula:
-                                        r'\mathbf{V}_{\text{pico}} = \mathbf{V}_{\text{RMS}} \times \sqrt{2}',
-                                    additional: '220 × 1,4142 ≈ 311,13 V',
-                                    additionalColor: const Color(0xFF00BCD4),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _card(
-                                    s: s,
-                                    visible: widget.step >= 2,
-                                    badgeNum: '2',
-                                    labelColor: const Color(0xFF2997FF),
-                                    label:
-                                        'ETAPA 2: GANHO CA — DIVISOR DE TENSÃO',
-                                    desc:
-                                        'Para o sinal CA, Vcc é curto-circuito (fonte ideal). R1 e R2 ficam em paralelo:',
-                                    formula:
-                                        r'\mathbf{R1 \| R2} = (R1 \times R2) \,/\, (R1 + R2)',
-                                    desc2:
-                                        'O ganho CA real do divisor R3 + (R1‖R2):',
-                                    formula2:
-                                        r'\mathbf{G}_{\text{CA}} = R1\|R2 \,/\, (R3 + R1\|R2)',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: _card(
-                                    s: s,
-                                    visible: widget.step >= 3,
-                                    badgeNum: '3',
-                                    labelColor: Colors.green,
-                                    label: 'ETAPA 3: OFFSET CC — NÍVEL DC',
-                                    desc:
-                                        'Para CC, a entrada CA é zero. O offset vem de Vcc através de R1. R3 e R2 ficam em paralelo vistos de R1:',
-                                    formula:
-                                        r'\mathbf{V}_{\text{cc}} = [R3\|R2 \,/\, (R1 + R3\|R2)] \times Vcc',
-                                    additional:
-                                        'Este nível DC desloca a senóide para que o vale fique próximo de 0V.',
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _card(
-                                    s: s,
-                                    visible: widget.step >= 4,
-                                    badgeNum: '4',
-                                    labelColor: Colors.red,
-                                    label: 'ETAPA 4: SAÍDA FINAL COMBINADA',
-                                    desc:
-                                        'Superposição: somamos a componente CA atenuada com o offset CC:',
-                                    formula:
-                                        r'\mathbf{V}_{\text{out}} = V_{\text{CC}} + G_{\text{CA}} \times V_{\text{pico}}',
-                                    additional:
-                                        'Critério: 0 ≤ Vout ≤ 5V para compatibilidade com ADC.',
-                                    additionalColor: Colors.green,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    SizedBox(height: 14 * s),
+                    Expanded(child: _buildContent(s, step)),
                   ],
                 ),
               ),
@@ -349,11 +113,267 @@ class _Slide06State extends State<Slide06> with SingleTickerProviderStateMixin {
       },
     );
   }
+
+  Widget _buildContent(double s, int step) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Left — circuit diagram
+        Expanded(child: _reveal(1, _buildCircuitPanel(s))),
+        SizedBox(width: 16 * s),
+        // Right — component descriptions
+        Expanded(child: _reveal(2, _buildInfoPanel(s))),
+      ],
+    );
+  }
+
+  Widget _buildCircuitPanel(double s) {
+    return Container(
+      padding: EdgeInsets.all(12 * s),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A1E38).withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12 * s),
+        border: Border.all(
+          color: const Color(0xFF1E4080).withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: const CustomPaint(
+        painter: _CircuitPainter(),
+        child: SizedBox.expand(),
+      ),
+    );
+  }
+
+  Widget _buildInfoPanel(double s) {
+    const teal = Color(0xFF00BFA5);
+    const orange = Color(0xFFFF9F0A);
+    const green = Color(0xFF30D158);
+    const purple = Color(0xFF9B7BE8);
+
+    return Container(
+      padding: EdgeInsets.all(20 * s),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A1E38).withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12 * s),
+        border: Border.all(
+          color: const Color(0xFF1E4080).withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'FUNÇÃO DOS COMPONENTES',
+            style: TextStyle(
+              color: teal,
+              fontSize: 10 * s,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
+            ),
+          ),
+          SizedBox(height: 16 * s),
+          _infoItem(
+            s,
+            'R3 (Série)',
+            orange,
+            'Atenua o sinal CA. Forma divisor de tensão com R1‖R2.',
+          ),
+          SizedBox(height: 14 * s),
+          _infoItem(
+            s,
+            'R1 (para Vcc)',
+            green,
+            'Introduz offset CC positivo. Eleva o sinal para faixa 0-5V.',
+          ),
+          SizedBox(height: 14 * s),
+          _infoItem(
+            s,
+            'R2 (para GND)',
+            purple,
+            'Completa divisor de tensão. R2 = R1 simplifica o cálculo.',
+          ),
+          SizedBox(height: 14 * s),
+          _infoItem(
+            s,
+            'Vout',
+            orange,
+            'Vcc + ganho_CA × Vpico. Deve ficar entre 0V e 5V.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoItem(double s, String title, Color color, String desc) {
+    return Container(
+      padding: EdgeInsets.only(left: 10 * s),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(color: color, width: 3 * s),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontSize: 12 * s,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 3 * s),
+          Text(
+            desc,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 11 * s,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+// ── Circuit Painter ────────────────────────────────────────────────────────────
+// Reference SVG viewBox: 0 0 560 420
+// Coordinates are scaled by (canvasWidth/560) and (canvasHeight/420).
+
+class _CircuitPainter extends CustomPainter {
+  const _CircuitPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double sx = size.width / 560;
+    final double sy = size.height / 420;
+
+    Offset o(double x, double y) => Offset(x * sx, y * sy);
+
+    RRect rr(double x, double y, double w, double h) => RRect.fromRectAndRadius(
+      Rect.fromLTWH(x * sx, y * sy, w * sx, h * sy),
+      Radius.circular(4 * sx),
+    );
+
+    Paint stroke(Color c) => Paint()
+      ..color = c
+      ..strokeWidth = 1.5 * sx
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    Paint fillP(Color c) => Paint()
+      ..color = c
+      ..style = PaintingStyle.fill;
+
+    const wireColor = Color(0xFF6A8FA8);
+    const cyan = Color(0xFF00BFA5);
+    const orange = Color(0xFFFF9F0A);
+    const blue = Color(0xFF5B9BD5);
+    const green = Color(0xFF30D158);
+    const purple = Color(0xFF9B7BE8);
+    const bgColor = Color(0xFF081828);
+
+    final wireP = stroke(wireColor);
+
+    // ── 1. Wires (drawn first so component fills cover their ends) ────────────
+
+    // 220V source right edge → R3 left edge
+    canvas.drawLine(o(105, 220), o(150, 220), wireP);
+    // R3 right edge → junction node
+    canvas.drawLine(o(250, 220), o(320, 220), wireP);
+    // Junction → Vout box left edge
+    canvas.drawLine(o(320, 220), o(385, 220), wireP);
+    // Junction up → R1 bottom edge
+    canvas.drawLine(o(320, 215), o(320, 175), wireP);
+    // R1 top edge → Vcc bottom edge
+    canvas.drawLine(o(320, 110), o(320, 83), wireP);
+    // Junction down → R2 top edge
+    canvas.drawLine(o(320, 225), o(320, 280), wireP);
+    // R2 bottom edge → GND top edge
+    canvas.drawLine(o(320, 345), o(320, 375), wireP);
+    // Vout right edge → ADC left edge
+    canvas.drawLine(o(460, 220), o(480, 220), wireP);
+
+    // ── 2. Component background fills (covers wire ends inside boxes) ─────────
+
+    final bg = fillP(bgColor.withValues(alpha: 0.85));
+    canvas.drawCircle(o(70, 220), 35 * sx, bg);
+    canvas.drawRRect(rr(150, 195, 100, 50), bg);
+    canvas.drawRRect(rr(290, 110, 60, 65), bg);
+    canvas.drawRRect(rr(285, 55, 70, 28), bg);
+    canvas.drawRRect(rr(290, 280, 60, 65), bg);
+    canvas.drawRRect(rr(290, 375, 60, 25), bg);
+    canvas.drawRRect(rr(385, 198, 75, 44), bg);
+    canvas.drawRRect(rr(480, 195, 70, 50), bg);
+
+    // ── 3. Component borders ──────────────────────────────────────────────────
+
+    canvas.drawCircle(o(70, 220), 35 * sx, stroke(cyan)); // 220V source
+    canvas.drawRRect(rr(150, 195, 100, 50), stroke(orange)); // R3
+    canvas.drawRRect(rr(290, 110, 60, 65), stroke(blue)); // R1
+    canvas.drawRRect(rr(285, 55, 70, 28), stroke(green)); // +Vcc
+    canvas.drawRRect(rr(290, 280, 60, 65), stroke(purple)); // R2
+    canvas.drawRRect(rr(290, 375, 60, 25), stroke(orange)); // GND
+    canvas.drawRRect(rr(385, 198, 75, 44), stroke(orange)); // Vout
+    canvas.drawRRect(rr(480, 195, 70, 50), stroke(green)); // ADC
+
+    // ── 4. Arrowhead: Vout → ADC ──────────────────────────────────────────────
+
+    final arrowHead = Path()
+      ..moveTo(o(484, 220).dx, o(484, 220).dy)
+      ..lineTo(o(479, 215).dx, o(479, 215).dy)
+      ..lineTo(o(479, 225).dx, o(479, 225).dy)
+      ..close();
+    canvas.drawPath(arrowHead, fillP(wireColor));
+
+    // ── 5. Junction node dot ──────────────────────────────────────────────────
+
+    canvas.drawCircle(o(320, 220), 5 * sx, fillP(Colors.white));
+    canvas.drawCircle(o(320, 220), 5 * sx, stroke(wireColor));
+
+    // ── 6. Text labels ────────────────────────────────────────────────────────
+
+    void label(String text, double cx, double cy, Color color, double fs) {
+      final tp = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: TextStyle(
+            color: color,
+            fontSize: fs * sx,
+            fontWeight: FontWeight.w600,
+            height: 1.25,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      )..layout(maxWidth: 90 * sx);
+      tp.paint(canvas, o(cx, cy) - Offset(tp.width / 2, tp.height / 2));
+    }
+
+    label('220V\nRMS', 70, 220, cyan, 9.5);
+    label('R3', 200, 220, orange, 13);
+    label('R1', 320, 142, blue, 13);
+    label('+Vcc\n(5V)', 320, 69, green, 9);
+    label('R2', 320, 312, purple, 13);
+    label('GND', 320, 387, orange, 9);
+    label('Vout\n0–5V', 422, 220, orange, 9);
+    label('ADC', 515, 220, green, 13);
+  }
+
+  @override
+  bool shouldRepaint(_CircuitPainter old) => false;
+}
+
+// ── Dot Grid ──────────────────────────────────────────────────────────────────
 
 class _DotGrid extends CustomPainter {
   final double s;
   const _DotGrid({required this.s});
+
   @override
   void paint(Canvas canvas, Size size) {
     final p = Paint()

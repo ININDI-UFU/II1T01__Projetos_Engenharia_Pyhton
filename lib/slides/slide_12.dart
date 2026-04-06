@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class Slide12 extends StatefulWidget {
+class Slide11 extends StatefulWidget {
   final int step;
-  const Slide12({super.key, required this.step});
+  const Slide11({super.key, required this.step});
 
   @override
-  State<Slide12> createState() => _Slide12State();
+  State<Slide11> createState() => _Slide11State();
 }
 
-class _Slide12State extends State<Slide12> with SingleTickerProviderStateMixin {
+class _Slide11State extends State<Slide11> with SingleTickerProviderStateMixin {
   late final AnimationController _entry;
 
   @override
@@ -26,26 +26,25 @@ class _Slide12State extends State<Slide12> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  Animatable<double> _iv(double a, double b) => Tween(
-    begin: 0.0,
-    end: 1.0,
-  ).chain(CurveTween(curve: Interval(a, b, curve: Curves.easeOut)));
+  Animation<double> _iv(double a, double b) => CurvedAnimation(
+    parent: _entry,
+    curve: Interval(a, b, curve: Curves.easeOut),
+  );
 
-  Widget _fade(Animatable<double> anim, {double? dy, required Widget child}) {
-    return AnimatedBuilder(
-      animation: _entry,
-      builder: (context, _) {
-        final t = anim.evaluate(_entry);
-        return Opacity(
-          opacity: t.clamp(0.0, 1.0),
-          child: Transform.translate(
-            offset: Offset(0, (dy ?? 18) * (1 - t)),
-            child: child,
-          ),
-        );
-      },
-    );
-  }
+  Widget _fade(
+    Animation<double> anim, {
+    double dy = 24,
+    required Widget child,
+  }) => AnimatedBuilder(
+    animation: anim,
+    builder: (context, _) => Opacity(
+      opacity: anim.value,
+      child: Transform.translate(
+        offset: Offset(0, dy * (1 - anim.value)),
+        child: child,
+      ),
+    ),
+  );
 
   Widget _reveal(bool visible, Widget child) {
     return AnimatedOpacity(
@@ -61,110 +60,162 @@ class _Slide12State extends State<Slide12> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _card({
-    required double s,
-    required Color borderColor,
-    required String name,
-    required String desc,
-  }) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF0A1E38).withValues(alpha: 0.8),
-          border: Border(left: BorderSide(color: borderColor, width: 4)),
-          borderRadius: BorderRadius.circular(10 * s),
-        ),
-        padding: EdgeInsets.all(14 * s),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              name,
-              style: TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 11 * s,
-                color: borderColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 6 * s),
-            Text(
-              desc,
-              style: TextStyle(
-                fontSize: 11 * s,
-                color: const Color(0xFFB0C4D8),
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
+  // ── Syntax highlight colours ──────────────────────────────────────────────
+
+  static const _kw = Color(0xFFFF7B72); // keywords
+  static const _cmt = Color(0xFF8B949E); // comments
+  static const _num = Color(0xFF79C0FF); // numbers
+  static const _reg = Color(0xFFE0E0E0); // regular code
+
+  // ── Left code: imports & constants ───────────────────────────────────────
+
+  List<InlineSpan> _leftSpans(double s) {
+    ts(String t, Color c) => TextSpan(
+      text: t,
+      style: TextStyle(
+        color: c,
+        fontFamily: 'monospace',
+        fontSize: 11 * s,
+        height: 1.6,
       ),
     );
+    return [
+      ts('import', _kw),
+      ts(' random\n', _reg),
+      ts('import', _kw),
+      ts(' math\n', _reg),
+      ts('import', _kw),
+      ts(' pandas ', _reg),
+      ts('as', _kw),
+      ts(' pd\n\n', _reg),
+      ts('# Parâmetros de entrada\n', _cmt),
+      ts('entrada_rms    = ', _reg),
+      ts('220.0', _num),
+      ts('\n', _reg),
+      ts('saida          = [', _reg),
+      ts('5.0', _num),
+      ts(', ', _reg),
+      ts('0.0', _num),
+      ts(']\n', _reg),
+      ts('Vcc            = ', _reg),
+      ts('5.0', _num),
+      ts('\n', _reg),
+      ts('max_tentativas = ', _reg),
+      ts('8000', _num),
+      ts('\n', _reg),
+      ts('random', _reg),
+      ts('.seed(', _reg),
+      ts('42', _num),
+      ts(')\n', _reg),
+    ];
+  }
+
+  // ── Right code: gerar_resistores ─────────────────────────────────────────
+
+  List<InlineSpan> _rightSpans(double s) {
+    ts(String t, Color c) => TextSpan(
+      text: t,
+      style: TextStyle(
+        color: c,
+        fontFamily: 'monospace',
+        fontSize: 11 * s,
+        height: 1.6,
+      ),
+    );
+    return [
+      ts('def', _kw),
+      ts(' gerar_resistores():\n', _reg),
+      ts('    bases_e24 = [\n', _reg),
+      ts('        ', _reg),
+      ts('10', _num),
+      ts(', ', _reg),
+      ts('11', _num),
+      ts(', ', _reg),
+      ts('12', _num),
+      ts(', ', _reg),
+      ts('13', _num),
+      ts(', ', _reg),
+      ts('15', _num),
+      ts(',\n', _reg),
+      ts('        ', _reg),
+      ts('16', _num),
+      ts(', ', _reg),
+      ts('18', _num),
+      ts(', ', _reg),
+      ts('20', _num),
+      ts(', ', _reg),
+      ts('22', _num),
+      ts(', ', _reg),
+      ts('24', _num),
+      ts(',\n', _reg),
+      ts('        ', _reg),
+      ts('27', _num),
+      ts(', ', _reg),
+      ts('30', _num),
+      ts(', ', _reg),
+      ts('33', _num),
+      ts(', ', _reg),
+      ts('36', _num),
+      ts(', ', _reg),
+      ts('39', _num),
+      ts(',\n', _reg),
+      ts('        ', _reg),
+      ts('43', _num),
+      ts(', ', _reg),
+      ts('47', _num),
+      ts(', ', _reg),
+      ts('51', _num),
+      ts(', ', _reg),
+      ts('56', _num),
+      ts(', ', _reg),
+      ts('62', _num),
+      ts(',\n', _reg),
+      ts('        ', _reg),
+      ts('68', _num),
+      ts(', ', _reg),
+      ts('75', _num),
+      ts(', ', _reg),
+      ts('82', _num),
+      ts('\n', _reg),
+      ts('    ]\n', _reg),
+      ts('    decadas = [', _reg),
+      ts('1', _num),
+      ts(', ', _reg),
+      ts('10', _num),
+      ts(', ', _reg),
+      ts('100', _num),
+      ts(', ', _reg),
+      ts('1e3', _num),
+      ts(',\n', _reg),
+      ts('               ', _reg),
+      ts('1e4', _num),
+      ts(', ', _reg),
+      ts('1e5', _num),
+      ts(', ', _reg),
+      ts('1e6', _num),
+      ts(']\n', _reg),
+      ts('    return', _kw),
+      ts(' [b*d ', _reg),
+      ts('for', _kw),
+      ts(' b ', _reg),
+      ts('in', _kw),
+      ts(' bases_e24\n', _reg),
+      ts('                  ', _reg),
+      ts('for', _kw),
+      ts(' d ', _reg),
+      ts('in', _kw),
+      ts(' decadas]\n', _reg),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
+    final titleA = _iv(0.00, 0.40);
+    final subA = _iv(0.15, 0.55);
+
     return LayoutBuilder(
       builder: (context, box) {
         final s = (box.maxWidth / 960).clamp(0.25, 2.5);
-
-        final row1 = Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _card(
-              s: s,
-              borderColor: const Color(0xFFFF9F0A),
-              name: 'calcular_ganho_ca(R1,R2,R3)',
-              desc:
-                  'Paralelo de R1 e R2, depois divisor com R3. Retorna o fator de atenuação CA.',
-            ),
-            SizedBox(width: 12 * s),
-            _card(
-              s: s,
-              borderColor: const Color(0xFF2997FF),
-              name: 'calcular_offset_cc(R1,R2,R3,Vcc)',
-              desc:
-                  'Paralelo de R3 e R2, depois divisor com R1. Retorna o nível DC do offset.',
-            ),
-            SizedBox(width: 12 * s),
-            _card(
-              s: s,
-              borderColor: const Color(0xFF30D158),
-              name: 'circuito_valido(R1,R2,R3,...)',
-              desc:
-                  'Verifica 5 critérios: faixa de saída, potência, corrente, offset e simetria.',
-            ),
-          ],
-        );
-
-        final row2 = Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _card(
-              s: s,
-              borderColor: const Color(0xFFBF5AF2),
-              name: 'formatar_resistor(valor)',
-              desc:
-                  'Transforma valor numérico em string legível: kΩ, MΩ com prefixo SI.',
-            ),
-            SizedBox(width: 12 * s),
-            _card(
-              s: s,
-              borderColor: const Color(0xFF64D2FF),
-              name: 'calcular_saida(R1,R2,R3,...)',
-              desc:
-                  'Calcula Vout_max e Vout_min combinando ganho CA + offset CC.',
-            ),
-            SizedBox(width: 12 * s),
-            _card(
-              s: s,
-              borderColor: const Color(0xFFFF453A),
-              name: 'busca_aleatoria(tentativas)',
-              desc:
-                  'Loop principal: sorteia, calcula, valida e armazena os circuitos válidos.',
-            ),
-          ],
-        );
 
         return DecoratedBox(
           decoration: const BoxDecoration(
@@ -184,36 +235,29 @@ class _Slide12State extends State<Slide12> with SingleTickerProviderStateMixin {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _fade(
-                      _iv(0.0, 0.5),
+                      titleA,
                       child: Text(
-                        'Funções Auxiliares',
+                        'Implementação em Python',
                         style: TextStyle(
-                          fontSize: 36 * s,
                           color: Colors.white,
+                          fontSize: 28 * s,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
                     _fade(
-                      _iv(0.1, 0.6),
+                      subA,
                       child: Text(
                         '',
                         style: TextStyle(
-                          fontSize: 12.5 * s,
-                          color: const Color(0xFF7B8EA2),
+                          fontSize: 16 * s,
+                          color: const Color(0xFF8EB4D8),
                         ),
                       ),
                     ),
                     SizedBox(height: 12 * s),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Expanded(child: _reveal(widget.step >= 1, row1)),
-                          SizedBox(height: 8 * s),
-                          Expanded(child: _reveal(widget.step >= 2, row2)),
-                        ],
-                      ),
-                    ),
+                    Expanded(child: _buildContent(s)),
                   ],
                 ),
               ),
@@ -223,7 +267,80 @@ class _Slide12State extends State<Slide12> with SingleTickerProviderStateMixin {
       },
     );
   }
+
+  Widget _buildContent(double s) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: _reveal(widget.step >= 1, _buildLeft(s))),
+        SizedBox(width: 20 * s),
+        Expanded(child: _reveal(widget.step >= 2, _buildRight(s))),
+      ],
+    );
+  }
+
+  // ── Left column ───────────────────────────────────────────────────────────
+
+  Widget _buildLeft(double s) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _sectionLabel(
+          '📄 IMPORTAÇÕES & CONSTANTES',
+          const Color(0xFFFF9F0A),
+          s,
+        ),
+        SizedBox(height: 8 * s),
+        _codeBlock(_leftSpans(s), s),
+      ],
+    );
+  }
+
+  // ── Right column ──────────────────────────────────────────────────────────
+
+  Widget _buildRight(double s) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _sectionLabel('⚡ GERAÇÃO DE RESISTORES', const Color(0xFF2997FF), s),
+        SizedBox(height: 8 * s),
+        _codeBlock(_rightSpans(s), s),
+      ],
+    );
+  }
+
+  // ── Shared helpers ────────────────────────────────────────────────────────
+
+  Widget _sectionLabel(String text, Color color, double s) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: color,
+        fontSize: 11 * s,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 0.6,
+      ),
+    );
+  }
+
+  Widget _codeBlock(List<InlineSpan> spans, double s) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF050D1A),
+        border: Border.all(
+          color: const Color(0xFF1E3854).withValues(alpha: 0.5),
+        ),
+        borderRadius: BorderRadius.circular(12 * s),
+      ),
+      padding: EdgeInsets.all(16 * s),
+      child: RichText(text: TextSpan(children: spans)),
+    );
+  }
 }
+
+// ── Dot Grid ──────────────────────────────────────────────────────────────────
 
 class _DotGrid extends CustomPainter {
   final double s;

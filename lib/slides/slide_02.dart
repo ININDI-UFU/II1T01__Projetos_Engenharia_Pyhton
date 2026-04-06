@@ -1,533 +1,741 @@
-import 'dart:math';
+import 'dart:js_interop';
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:flutter_highlight/themes/vs2015.dart';
+import 'package:highlight/languages/python.dart';
 
-// ── Block metadata ────────────────────────────────────────────────────────────
+// ── JS interop declarations ───────────────────────────────────────────────────
 
-const _kBlocks = [
-  _BlockData(
-    title: 'Grandeza\nFísica',
-    subtitle: 'Tensão, Corrente,\nTemperatura, Pressão',
-    bg: Color(0xFF1A2D50),
-    border: Color(0xFF2A4D80),
-    titleColor: Color(0xFFFFFFFF),
-    topLabel: '220V RMS',
-    topLabelColor: Color(0xFFBBCCDD),
-  ),
-  _BlockData(
-    title: 'Transdutor\n/ Sensor',
-    subtitle: 'Converte grandeza\nem sinal elétrico',
-    bg: Color(0xFF0D3040),
-    border: Color(0xFF0099BB),
-    titleColor: Color(0xFF00C5E8),
-  ),
-  _BlockData(
-    title: 'Condicionador\nde Sinais',
-    subtitle: 'Atenua, amplifica,\nfiltra, adiciona offset',
-    bg: Color(0xFF5C2000),
-    border: Color(0xFFFF6B00),
-    titleColor: Color(0xFFFFFFFF),
-    topLabel: '±311V pico',
-    topLabelColor: Color(0xFFFF8833),
-    highlighted: true,
-  ),
-  _BlockData(
-    title: 'Conversor\nA/D (ADC)',
-    subtitle: 'Converte analógico\npara digital (0–5V)',
-    bg: Color(0xFF0D3020),
-    border: Color(0xFF00BB55),
-    titleColor: Color(0xFF00DD66),
-    topLabel: '0 – 5 V',
-    topLabelColor: Color(0xFF00C5A0),
-  ),
-  _BlockData(
-    title: 'Micro-\ncontrolador',
-    subtitle: 'Processa dados\ndigitais',
-    bg: Color(0xFF2A1550),
-    border: Color(0xFF6644CC),
-    titleColor: Color(0xFF9977EE),
-    topLabel: 'Bits',
-    topLabelColor: Color(0xFF9977EE),
-  ),
-];
+@JS('isPyodideReady')
+external bool _isPyodideReady();
 
-const _kArrowColors = [
-  Color(0x66FFFFFF), // block0→1
-  Color(0xCCFF6B00), // block1→2 (into condicionador)
-  Color(0x9900BB55), // block2→3
-  Color(0x886644CC), // block3→4
-];
+@JS('runPythonCode')
+external JSPromise<JSAny?> _runPythonCode(JSString code);
 
-// ── Widget ────────────────────────────────────────────────────────────────────
+@JS('getPyResult')
+external JSString? _getPyResult();
 
-class Slide02 extends StatefulWidget {
-  /// 0 = title/sub visible, chain empty.
-  /// 1-5 = blocks revealed one by one; 5 also shows info box.
-  final int step;
-  const Slide02({super.key, this.step = 0});
+// ─────────────────────────────────────────────────────────────────────────────
+// Slide 17 — Python Interativo (Pyodide) — Gráfico Cos/Sin
+// ─────────────────────────────────────────────────────────────────────────────
+
+class Slide17 extends StatefulWidget {
+  const Slide17({super.key});
 
   @override
-  State<Slide02> createState() => _Slide02State();
+  State<Slide17> createState() => _Slide17State();
 }
 
-class _Slide02State extends State<Slide02> with TickerProviderStateMixin {
+class _Slide17State extends State<Slide17> with SingleTickerProviderStateMixin {
   late final AnimationController _entry;
-  late final AnimationController _pulse;
+  late final CodeController _codeCtrl;
+  late final ScrollController _outputScroll;
+
+  Timer? _pollTimer;
+  bool _pyodideReady = false;
+  bool _running = false;
+  bool _hasOutput = false;
+  bool _hasError = false;
+  bool _editorFullscreen = false;
+  bool _outputFullscreen = false;
+  String _output = '';
+  List<Uint8List> _plotImages = [];
+
+  // ── Código pré-carregado ──────────────────────────────────────────────────
+  static const _sample = r'''from numpy import cos, sin, pi, arange
+from pylab import show, figure, plot, title, legend
+
+T:int = 20.0
+t = arange(0,100,0.1)
+y1 = cos((2*pi*(1/T))*t)
+y2 = sin(2*pi*(1/T)*t)
+figure(1)
+line1,line2 = plot(t,y1,'b',t,y2,'r')
+title("Aula 01 de Instrumentação Industrial")
+legend([line1,line2], ["COS","SIN"])
+show()
+''';
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
     _entry = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 900),
     )..forward();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
+    _codeCtrl = CodeController(text: _sample, language: python);
+    _outputScroll = ScrollController();
+    _startPyodidePoll();
+  }
+
+  void _startPyodidePoll() {
+    _checkReady();
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _checkReady(),
+    );
+  }
+
+  void _checkReady() {
+    try {
+      final ready = _isPyodideReady();
+      if (ready && mounted && !_pyodideReady) {
+        setState(() => _pyodideReady = true);
+        _pollTimer?.cancel();
+      }
+    } catch (_) {}
   }
 
   @override
   void dispose() {
     _entry.dispose();
-    _pulse.dispose();
+    _codeCtrl.dispose();
+    _outputScroll.dispose();
+    _pollTimer?.cancel();
     super.dispose();
   }
 
+  // ── Animation helpers ─────────────────────────────────────────────────────
+
   Animation<double> _iv(double a, double b) => CurvedAnimation(
     parent: _entry,
-    curve: Interval(a, b, curve: Curves.easeOutCubic),
+    curve: Interval(a, b, curve: Curves.easeOut),
   );
 
   Widget _fade(
-    Animation<double> a, {
-    required double dy,
+    Animation<double> anim, {
+    double dy = 24,
     required Widget child,
-  }) {
-    return AnimatedBuilder(
-      animation: a,
-      builder: (context, _) => Opacity(
-        opacity: a.value.clamp(0.0, 1.0),
-        child: Transform.translate(
-          offset: Offset(0, dy * (1 - a.value)),
-          child: child,
-        ),
+  }) => AnimatedBuilder(
+    animation: anim,
+    builder: (context, _) => Opacity(
+      opacity: anim.value,
+      child: Transform.translate(
+        offset: Offset(0, dy * (1 - anim.value)),
+        child: child,
       ),
-    );
+    ),
+  );
+
+  // ── Run code ─────────────────────────────────────────────────────────────
+
+  Future<void> _runCode() async {
+    if (!_pyodideReady || _running) return;
+    setState(() {
+      _running = true;
+      _hasOutput = false;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 60));
+
+    try {
+      await _runPythonCode(_codeCtrl.fullText.toJS).toDart;
+      final raw =
+          _getPyResult()?.toDart ??
+          '{"success":false,"output":"Sem resultado"}';
+      final Map<String, dynamic> json = jsonDecode(raw);
+      final output = json['output'] as String? ?? '';
+      final success = json['success'] as bool? ?? false;
+
+      // Separar texto e imagens de plot
+      String textOutput = output;
+      List<Uint8List> images = [];
+      if (output.contains('__PLOT_DATA__\n')) {
+        final parts = output.split('__PLOT_DATA__\n');
+        textOutput = parts[0].trim();
+        if (parts.length > 1 && parts[1].isNotEmpty) {
+          final b64List = parts[1].split('|||');
+          for (final b64 in b64List) {
+            if (b64.isNotEmpty) {
+              try {
+                images.add(base64Decode(b64));
+              } catch (_) {}
+            }
+          }
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _running = false;
+          _hasError = !success;
+          _hasOutput = true;
+          _output = textOutput.isNotEmpty
+              ? textOutput
+              : (images.isEmpty ? '(sem saída)' : '');
+          _plotImages = images;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_outputScroll.hasClients) {
+            _outputScroll.animateTo(
+              _outputScroll.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _running = false;
+          _hasError = true;
+          _hasOutput = true;
+          _output = 'Erro ao chamar Pyodide: $e';
+        });
+      }
+    }
   }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final titleA = _iv(0.00, 0.40);
-    final subA = _iv(0.15, 0.55);
-    final step = widget.step;
-    final pulseA = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
+    return LayoutBuilder(
+      builder: (context, box) {
+        final s = (box.maxWidth / 960).clamp(0.25, 2.5);
 
-    return LayoutBuilder(builder: (context, box) {
-      final s = (box.maxWidth / 960).clamp(0.25, 2.5);
-
-      return DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0C1B30), Color(0xFF071320), Color(0xFF040D18)],
-            stops: [0.0, 0.55, 1.0],
+        return DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF0C1B30), Color(0xFF071320), Color(0xFF040D18)],
+            ),
           ),
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned.fill(child: CustomPaint(painter: _DotGrid(s: s))),
-            Padding(
-              padding: EdgeInsets.fromLTRB(36 * s, 28 * s, 36 * s, 16 * s),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title — always animates on entry
-                  _fade(titleA, dy: -20.0 * s, child: Text(
-                    'Cadeia de Medição',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 36 * s,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.4,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CustomPaint(painter: _DotGrid(s: s)),
+              Padding(
+                padding: EdgeInsets.fromLTRB(36 * s, 22 * s, 36 * s, 14 * s),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _fade(_iv(0.0, 0.40), child: _buildHeader(s)),
+                    SizedBox(height: 14 * s),
+                    Expanded(
+                      child: _fade(_iv(0.2, 0.70), child: _buildBody(s)),
                     ),
-                  )),
-                  SizedBox(height: 6 * s),
-                  // Subtitle
-                  _fade(subA, dy: 12.0 * s, child: Text(
-                    'O transdutor converte uma grandeza física em sinal elétrico. '
-                    'O condicionador adapta esse sinal para o domínio digital.',
-                    style: TextStyle(
-                      color: const Color(0xFF7B8EA2),
-                      fontSize: 12.5 * s,
-                      height: 1.4,
+                  ],
+                ),
+              ),
+              if (_editorFullscreen)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF0C1B30),
+                          Color(0xFF071320),
+                          Color(0xFF040D18),
+                        ],
+                      ),
                     ),
-                  )),
-                  SizedBox(height: 12 * s),
-                  // Chain — step-controlled
-                  Expanded(child: _buildChain(s, step, pulseA)),
-                  SizedBox(height: 8 * s),
-                  // Info box — only at step 5
-                  AnimatedOpacity(
-                    opacity: step >= 5 ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 450),
-                    curve: Curves.easeOut,
-                    child: AnimatedSlide(
-                      offset: step >= 5 ? Offset.zero : const Offset(0, 0.25),
-                      duration: const Duration(milliseconds: 450),
-                      curve: Curves.easeOut,
-                      child: _buildInfoBox(s),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CustomPaint(painter: _DotGrid(s: s)),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            36 * s,
+                            22 * s,
+                            36 * s,
+                            14 * s,
+                          ),
+                          child: _buildEditor(s),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
+              if (_outputFullscreen)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF060E18),
+                          Color(0xFF040D18),
+                          Color(0xFF020A12),
+                        ],
+                      ),
+                    ),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CustomPaint(painter: _DotGrid(s: s)),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            36 * s,
+                            22 * s,
+                            36 * s,
+                            14 * s,
+                          ),
+                          child: _buildOutput(s),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Header ────────────────────────────────────────────────────────────────
+
+  Widget _buildHeader(double s) {
+    final readyColor = _pyodideReady
+        ? const Color(0xFF30D158)
+        : const Color(0xFFFF9F0A);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Python Interativo',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28 * s,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(width: 10 * s),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8 * s,
+                    vertical: 3 * s,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3A7BF0).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6 * s),
+                    border: Border.all(
+                      color: const Color(0xFF3A7BF0).withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Text(
+                    'Pyodide',
+                    style: TextStyle(
+                      color: const Color(0xFF79AAFF),
+                      fontSize: 10 * s,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              'Execute código Python diretamente no browser via WebAssembly',
+              style: TextStyle(
+                color: const Color(0xFF8EB4D8),
+                fontSize: 13 * s,
               ),
             ),
           ],
         ),
-      );
-    });
-  }
-
-  // ── Chain ──────────────────────────────────────────────────────────────────
-
-  Widget _buildChain(double s, int step, Animation<double> pulseA) {
-    return LayoutBuilder(builder: (ctx, box) {
-      // Fixed flex ratio: each block = 22, each arrow = 7 → total = 138
-      const bFlex = 22, aFlex = 7, total = 5 * bFlex + 4 * aFlex;
-
-      // Reserve space for labels above and badge below (in block scale units)
-      // These use bs so they scale with the block, not independently.
-      // For the initial calculation, estimate bs ≈ s then refine.
-      final blockW = box.maxWidth * bFlex / total;
-      // Reserve ~20px label + 8px gap + 26px badge + 8px gap at scale s
-      final reservedH = (20 + 8 + 26 + 8) * s;
-      final blockAreaH = (box.maxHeight - reservedH).clamp(40.0, double.infinity);
-      final blockSize = min(blockW, blockAreaH);
-      final bs = s * (blockSize / blockW).clamp(0.0, 1.0);
-      final arrowW = box.maxWidth * aFlex / total;
-
-      // Labels, blocks and badge are stacked in a tight column,
-      // then the whole group is centered vertically in the available space.
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── Top labels — always directly above blocks ──
-            _buildLabelRow(bs, step, blockSize, arrowW),
-            SizedBox(height: 8 * bs),
-            // ── Blocks + arrows ──
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                for (int i = 0; i < 5; i++) ...[
-                  _animatedBlock(i, bs, step, pulseA, blockSize),
-                  if (i < 4) _animatedArrow(i, bs, step, arrowW, blockSize),
-                ],
-              ],
-            ),
-            SizedBox(height: 8 * bs),
-            // ── "FOCO DESTA AULA" badge — always directly below blocks ──
-            _buildBadgeRow(bs, step, blockSize, arrowW),
-          ],
-        ),
-      );
-    });
-  }
-
-  Widget _buildLabelRow(double bs, int step, double blockSize, double arrowW) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        for (int i = 0; i < 5; i++) ...[
-          SizedBox(
-            width: blockSize,
-            child: _kBlocks[i].topLabel != null
-              ? AnimatedOpacity(
-                  opacity: step >= i + 1 ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    _kBlocks[i].topLabel!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: _kBlocks[i].topLabelColor ?? Colors.white70,
-                      fontSize: 10 * bs,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                )
-              : const SizedBox.shrink(),
+        const Spacer(),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 500),
+          padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 7 * s),
+          decoration: BoxDecoration(
+            color: readyColor.withValues(alpha: 0.10),
+            border: Border.all(color: readyColor.withValues(alpha: 0.45)),
+            borderRadius: BorderRadius.circular(20 * s),
           ),
-          if (i < 4) SizedBox(width: arrowW),
-        ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_pyodideReady)
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: readyColor,
+                  size: 13 * s,
+                )
+              else
+                SizedBox(
+                  width: 12 * s,
+                  height: 12 * s,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.8 * s,
+                    color: readyColor,
+                  ),
+                ),
+              SizedBox(width: 7 * s),
+              Text(
+                _pyodideReady ? 'Pyodide pronto ✓' : 'Carregando Pyodide...',
+                style: TextStyle(
+                  color: readyColor,
+                  fontSize: 11 * s,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildBadgeRow(double bs, int step, double blockSize, double arrowW) {
+  // ── Body (editor + output) ─────────────────────────────────────────────────
+
+  Widget _buildBody(double s) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (int i = 0; i < 5; i++) ...[
-          SizedBox(
-            width: blockSize,
-            child: i == 2
-              ? Center(
-                  child: AnimatedOpacity(
-                    opacity: step >= 3 ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 350),
-                    child: AnimatedSlide(
-                      offset: step >= 3 ? Offset.zero : const Offset(0, -0.5),
-                      duration: const Duration(milliseconds: 350),
-                      curve: Curves.easeOut,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8 * bs,
-                          vertical: 3 * bs,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF6B00),
-                          borderRadius: BorderRadius.circular(4 * bs),
-                        ),
-                        child: Text(
-                          'FOCO DESTA AULA',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 8 * bs,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
-                          ),
+        Expanded(flex: 58, child: _buildEditor(s)),
+        SizedBox(width: 16 * s),
+        Expanded(flex: 42, child: _buildOutput(s)),
+      ],
+    );
+  }
+
+  // ── Code editor ──────────────────────────────────────────────────────────
+
+  Widget _buildEditor(double s) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        border: Border.all(
+          color: const Color(0xFF00C7FF).withValues(alpha: 0.30),
+        ),
+        borderRadius: BorderRadius.circular(12 * s),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _panelHeader(
+            icon: Icons.code_rounded,
+            label: 'CÓDIGO PYTHON',
+            color: const Color(0xFF00C7FF),
+            s: s,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.copy_rounded,
+                    color: Colors.white38,
+                    size: 14 * s,
+                  ),
+                  tooltip: 'Copiar código',
+                  onPressed: () => Clipboard.setData(
+                    ClipboardData(text: _codeCtrl.fullText),
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(
+                    minWidth: 26 * s,
+                    minHeight: 26 * s,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    _editorFullscreen
+                        ? Icons.fullscreen_exit_rounded
+                        : Icons.fullscreen_rounded,
+                    color: Colors.white54,
+                    size: 16 * s,
+                  ),
+                  tooltip: _editorFullscreen
+                      ? 'Restaurar tamanho'
+                      : 'Expandir editor',
+                  onPressed: () =>
+                      setState(() => _editorFullscreen = !_editorFullscreen),
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(
+                    minWidth: 26 * s,
+                    minHeight: 26 * s,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: CodeTheme(
+              data: CodeThemeData(styles: vs2015Theme),
+              child: CodeField(
+                controller: _codeCtrl,
+                expands: true,
+                background: const Color(0xFF1E1E1E),
+                textStyle: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 11.5 * s,
+                  height: 1.65,
+                ),
+                padding: EdgeInsets.fromLTRB(4 * s, 10 * s, 14 * s, 8 * s),
+                gutterStyle: GutterStyle(
+                  width: 44 * s,
+                  background: const Color(0xFF161616),
+                  textStyle: TextStyle(color: Colors.white38),
+                  showErrors: false,
+                  showFoldingHandles: true,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(14 * s, 0, 14 * s, 14 * s),
+            child: _buildRunButton(s),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRunButton(double s) {
+    final canRun = _pyodideReady && !_running;
+    final accent = const Color(0xFF30D158);
+    return GestureDetector(
+      onTap: canRun ? _runCode : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 40 * s,
+        decoration: BoxDecoration(
+          color: canRun
+              ? accent.withValues(alpha: 0.13)
+              : Colors.white.withValues(alpha: 0.04),
+          border: Border.all(
+            color: canRun
+                ? accent.withValues(alpha: 0.55)
+                : Colors.white.withValues(alpha: 0.08),
+          ),
+          borderRadius: BorderRadius.circular(8 * s),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_running)
+              SizedBox(
+                width: 13 * s,
+                height: 13 * s,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2 * s,
+                  color: accent,
+                ),
+              )
+            else
+              Icon(
+                Icons.play_arrow_rounded,
+                color: canRun ? accent : Colors.white24,
+                size: 18 * s,
+              ),
+            SizedBox(width: 8 * s),
+            Text(
+              _running
+                  ? 'Executando...'
+                  : !_pyodideReady
+                  ? 'Aguardando Pyodide...'
+                  : 'Executar',
+              style: TextStyle(
+                color: canRun ? accent : Colors.white30,
+                fontSize: 12 * s,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Output panel ─────────────────────────────────────────────────────────
+
+  Widget _buildOutput(double s) {
+    final Color borderColor;
+    if (!_hasOutput) {
+      borderColor = const Color(0xFF1E3854);
+    } else if (_hasError) {
+      borderColor = const Color(0xFFFF453A);
+    } else {
+      borderColor = const Color(0xFF30D158);
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF060E18),
+        border: Border.all(color: borderColor.withValues(alpha: 0.40)),
+        borderRadius: BorderRadius.circular(12 * s),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _panelHeader(
+            icon: _hasError
+                ? Icons.error_outline_rounded
+                : Icons.terminal_rounded,
+            label: _hasError ? 'ERRO' : 'SAÍDA',
+            color: borderColor,
+            s: s,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_hasOutput)
+                  IconButton(
+                    icon: Icon(
+                      Icons.cleaning_services_rounded,
+                      color: Colors.white38,
+                      size: 13 * s,
+                    ),
+                    tooltip: 'Limpar saída',
+                    onPressed: () => setState(() {
+                      _output = '';
+                      _plotImages = [];
+                      _hasOutput = false;
+                      _hasError = false;
+                    }),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(
+                      minWidth: 26 * s,
+                      minHeight: 26 * s,
+                    ),
+                  ),
+                IconButton(
+                  icon: Icon(
+                    _outputFullscreen
+                        ? Icons.fullscreen_exit_rounded
+                        : Icons.fullscreen_rounded,
+                    color: Colors.white54,
+                    size: 16 * s,
+                  ),
+                  tooltip: _outputFullscreen
+                      ? 'Restaurar tamanho'
+                      : 'Expandir saída',
+                  onPressed: () =>
+                      setState(() => _outputFullscreen = !_outputFullscreen),
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(
+                    minWidth: 26 * s,
+                    minHeight: 26 * s,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _hasOutput
+                ? Padding(
+                    padding: EdgeInsets.all(14 * s),
+                    child: Scrollbar(
+                      controller: _outputScroll,
+                      child: SingleChildScrollView(
+                        controller: _outputScroll,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_output.isNotEmpty)
+                              SelectableText(
+                                _output,
+                                style: TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 12 * s,
+                                  color: _hasError
+                                      ? const Color(0xFFFF9898)
+                                      : const Color(0xFF9EE09E),
+                                  height: 1.65,
+                                ),
+                              ),
+                            for (final imgBytes in _plotImages) ...[
+                              SizedBox(height: 10 * s),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8 * s),
+                                child: Image.memory(
+                                  imgBytes,
+                                  fit: BoxFit.contain,
+                                  width: double.infinity,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ),
+                  )
+                : Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.terminal_rounded,
+                          color: Colors.white10,
+                          size: 40 * s,
+                        ),
+                        SizedBox(height: 10 * s),
+                        Text(
+                          _pyodideReady
+                              ? 'Pressione  ▶ Executar  para rodar o código'
+                              : 'Aguardando Pyodide carregar (~5–20 s)...',
+                          style: TextStyle(
+                            color: Colors.white24,
+                            fontSize: 11 * s,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                )
-              : const SizedBox.shrink(),
-          ),
-          if (i < 4) SizedBox(width: arrowW),
-        ],
-      ],
-    );
-  }
-
-  // ── Animated block ─────────────────────────────────────────────────────────
-
-  Widget _animatedBlock(
-    int i,
-    double bs,
-    int step,
-    Animation<double> pulseA,
-    double blockSize,
-  ) {
-    final visible = step >= i + 1;
-    return SizedBox(
-      width: blockSize,
-      height: blockSize,
-      child: AnimatedOpacity(
-        opacity: visible ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 420),
-        curve: Curves.easeOut,
-        child: AnimatedScale(
-          scale: visible ? 1.0 : 0.65,
-          duration: const Duration(milliseconds: 420),
-          curve: Curves.easeOutBack,
-          child: i == 2
-            ? AnimatedBuilder(
-                animation: pulseA,
-                builder: (ctx, _) =>
-                  _buildBlock(_kBlocks[i], bs, blockSize, pulseA.value),
-              )
-            : _buildBlock(_kBlocks[i], bs, blockSize, 0.0),
-        ),
-      ),
-    );
-  }
-
-  // ── Animated arrow ─────────────────────────────────────────────────────────
-
-  Widget _animatedArrow(int i, double bs, int step, double arrowW, double blockSize) {
-    // Arrow appears together with its destination block (i+1)
-    final visible = step >= i + 2;
-    return SizedBox(
-      width: arrowW,
-      height: blockSize,
-      child: AnimatedOpacity(
-        opacity: visible ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-        child: CustomPaint(
-          painter: _StaticArrow(arrowW: arrowW, color: _kArrowColors[i]),
-        ),
-      ),
-    );
-  }
-
-  // ── Block widget ───────────────────────────────────────────────────────────
-
-  Widget _buildBlock(_BlockData d, double bs, double blockSize, double pulse) {
-    final radius = blockSize * 0.09;
-    return Container(
-      margin: EdgeInsets.all(bs * 2),
-      decoration: BoxDecoration(
-        color: d.bg,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
-          color: d.highlighted
-            ? d.border.withValues(alpha: 0.50 + 0.45 * pulse)
-            : d.border.withValues(alpha: 0.45),
-          width: d.highlighted ? 2.0 * bs : 1.0 * bs,
-        ),
-        boxShadow: d.highlighted
-          ? [
-              BoxShadow(
-                color: d.border.withValues(alpha: 0.20 + 0.18 * pulse),
-                blurRadius: 18 * bs,
-                spreadRadius: 2 * bs,
-              ),
-            ]
-          : [
-              BoxShadow(
-                color: d.border.withValues(alpha: 0.10),
-                blurRadius: 8 * bs,
-              ),
-            ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            d.title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: d.titleColor,
-              fontSize: 12 * bs,
-              fontWeight: FontWeight.w700,
-              height: 1.2,
-            ),
-          ),
-          SizedBox(height: 6 * bs),
-          Text(
-            d.subtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white60,
-              fontSize: 9.5 * bs,
-              height: 1.3,
-            ),
           ),
         ],
       ),
     );
   }
 
-  // ── Info box ───────────────────────────────────────────────────────────────
+  // ── Shared panel header ───────────────────────────────────────────────────
 
-  Widget _buildInfoBox(double s) {
+  Widget _panelHeader({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required double s,
+    Widget? trailing,
+  }) {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 9 * s),
+      padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 8 * s),
       decoration: BoxDecoration(
-        color: const Color(0xFF0A1E38).withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(10 * s),
-        border: Border.all(
-          color: const Color(0xFF1E4080).withValues(alpha: 0.4),
+        color: color.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(11 * s),
+          topRight: Radius.circular(11 * s),
+        ),
+        border: Border(
+          bottom: BorderSide(color: color.withValues(alpha: 0.18)),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
+          Icon(icon, color: color, size: 13 * s),
+          SizedBox(width: 7 * s),
           Text(
-            'TIPOS COMUNS DE TRANSDUTORES',
+            label,
             style: TextStyle(
-              color: const Color(0xFF00BCD4),
+              color: color,
               fontSize: 9.5 * s,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.4,
             ),
           ),
-          SizedBox(height: 4 * s),
-          RichText(
-            text: TextSpan(
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 11 * s,
-                height: 1.5,
-              ),
-              children: const [
-                TextSpan(
-                  text: 'Termopar',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                TextSpan(text: ' (temperatura)  •  '),
-                TextSpan(
-                  text: 'Strain Gauge',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                TextSpan(text: ' (deformação)  •  '),
-                TextSpan(
-                  text: 'TC/TP',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                TextSpan(text: ' (corrente/tensão)  •  '),
-                TextSpan(
-                  text: 'LDR/Fotodiodo',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                TextSpan(text: ' (luminosidade)  •  '),
-                TextSpan(
-                  text: 'Acelerômetro',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                TextSpan(text: ' (vibração)'),
-              ],
-            ),
-          ),
-          SizedBox(height: 3 * s),
-          Text(
-            'Neste projeto: a rede elétrica (220V AC) é o próprio sinal de entrada '
-            '— o condicionador é o foco principal.',
-            style: TextStyle(
-              color: const Color(0xFF00BCD4),
-              fontSize: 10 * s,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+          const Spacer(),
+          ?trailing,
         ],
       ),
     );
   }
-}
-
-// ── Block data ────────────────────────────────────────────────────────────────
-
-class _BlockData {
-  final String title;
-  final String subtitle;
-  final Color bg;
-  final Color border;
-  final Color titleColor;
-  final String? topLabel;
-  final Color? topLabelColor;
-  final bool highlighted;
-
-  const _BlockData({
-    required this.title,
-    required this.subtitle,
-    required this.bg,
-    required this.border,
-    required this.titleColor,
-    this.topLabel,
-    this.topLabelColor,
-    this.highlighted = false,
-  });
 }
 
 // ── Dot Grid ──────────────────────────────────────────────────────────────────
@@ -552,47 +760,4 @@ class _DotGrid extends CustomPainter {
 
   @override
   bool shouldRepaint(_DotGrid o) => false;
-}
-
-// ── Static Arrow ──────────────────────────────────────────────────────────────
-
-class _StaticArrow extends CustomPainter {
-  final double arrowW;
-  final Color color;
-
-  const _StaticArrow({required this.arrowW, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cy = size.height / 2;
-    final headH = (arrowW * 0.20).clamp(4.0, 16.0);
-    final headW = headH * 1.3;
-    final strokeW = (arrowW * 0.045).clamp(1.0, 3.0);
-
-    // Line body
-    canvas.drawLine(
-      Offset(0, cy),
-      Offset(size.width - headW, cy),
-      Paint()
-        ..color = color
-        ..strokeWidth = strokeW
-        ..strokeCap = StrokeCap.round,
-    );
-
-    // Filled arrowhead
-    final path = Path()
-      ..moveTo(size.width, cy)
-      ..lineTo(size.width - headW, cy - headH)
-      ..lineTo(size.width - headW, cy + headH)
-      ..close();
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.fill,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_StaticArrow o) => o.color != color || o.arrowW != arrowW;
 }

@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 
-class Slide10 extends StatefulWidget {
+// ---------------------------------------------------------------------------
+// Slide 09 - Arquitetura do Software
+// max step: 3  (Entrada -> Processamento -> Saida)
+// step=0 -> layer frames visible (skeleton), content hidden
+// step=1 -> ENTRADA content revealed
+// step=2 -> PROCESSAMENTO content + arrow 1->2
+// step=3 -> SAIDA content + arrow 2->3
+// ---------------------------------------------------------------------------
+
+class Slide09 extends StatefulWidget {
   final int step;
-  const Slide10({super.key, required this.step});
+  const Slide09({super.key, required this.step});
 
   @override
-  State<Slide10> createState() => _Slide10State();
+  State<Slide09> createState() => _Slide09State();
 }
 
-class _Slide10State extends State<Slide10> with SingleTickerProviderStateMixin {
+class _Slide09State extends State<Slide09> with SingleTickerProviderStateMixin {
   late final AnimationController _entry;
 
   @override
@@ -16,7 +25,7 @@ class _Slide10State extends State<Slide10> with SingleTickerProviderStateMixin {
     super.initState();
     _entry = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 1200),
     )..forward();
   }
 
@@ -46,49 +55,22 @@ class _Slide10State extends State<Slide10> with SingleTickerProviderStateMixin {
     ),
   );
 
-  Widget _reveal(bool visible, Widget child) {
-    return AnimatedOpacity(
-      opacity: visible ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeOut,
-      child: AnimatedScale(
-        scale: visible ? 1.0 : 0.90,
-        duration: const Duration(milliseconds: 420),
-        curve: Curves.easeOutBack,
-        child: child,
-      ),
-    );
-  }
+  Widget _reveal(bool visible, Widget child) => AnimatedOpacity(
+    opacity: visible ? 1.0 : 0.0,
+    duration: const Duration(milliseconds: 450),
+    curve: Curves.easeOut,
+    child: AnimatedScale(
+      scale: visible ? 1.0 : 0.92,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutBack,
+      child: child,
+    ),
+  );
 
-  // ── Table data ────────────────────────────────────────────────────────────
-
-  static const _headers = [
-    'Base',
-    '×1',
-    '×10',
-    '×100',
-    '×1k',
-    '×10k',
-    '×100k',
-    '×1M',
-  ];
-
-  static const _rows = [
-    ['10', '10Ω', '100Ω', '1kΩ', '10kΩ', '100kΩ', '1MΩ', '10MΩ'],
-    ['15', '15Ω', '150Ω', '1.5kΩ', '15kΩ', '150kΩ', '1.5MΩ', '15MΩ'],
-    ['22', '22Ω', '220Ω', '2.2kΩ', '22kΩ', '220kΩ', '2.2MΩ', '22MΩ'],
-    ['33', '33Ω', '330Ω', '3.3kΩ', '33kΩ', '330kΩ', '3.3MΩ', '33MΩ'],
-    ['47', '47Ω', '470Ω', '4.7kΩ', '47kΩ', '470kΩ', '4.7MΩ', '47MΩ'],
-    ['68', '68Ω', '680Ω', '6.8kΩ', '68kΩ', '680kΩ', '6.8MΩ', '68MΩ'],
-    ['82', '82Ω', '820Ω', '8.2kΩ', '82kΩ', '820kΩ', '8.2MΩ', '82MΩ'],
-    ['...', '...', '...', '...', '...', '...', '...', '...'],
-  ];
+  // -- Build -----------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
-    final titleA = _iv(0.00, 0.40);
-    final subA = _iv(0.15, 0.55);
-
     return LayoutBuilder(
       builder: (context, box) {
         final s = (box.maxWidth / 960).clamp(0.25, 2.5);
@@ -106,34 +88,23 @@ class _Slide10State extends State<Slide10> with SingleTickerProviderStateMixin {
             children: [
               CustomPaint(painter: _DotGrid(s: s)),
               Padding(
-                padding: EdgeInsets.fromLTRB(36 * s, 28 * s, 36 * s, 16 * s),
+                padding: EdgeInsets.fromLTRB(36 * s, 22 * s, 36 * s, 18 * s),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _fade(
-                      titleA,
+                      _iv(0.0, 0.35),
                       child: Text(
-                        'Série E24 — Resistores Comerciais',
+                        'Arquitetura do Software',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 28 * s,
+                          fontSize: 32 * s,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
-                    _fade(
-                      subA,
-                      child: Text(
-                        '',
-                        style: TextStyle(
-                          fontSize: 16 * s,
-                          color: const Color(0xFF8EB4D8),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12 * s),
-                    Expanded(child: _buildContent(s)),
+                    SizedBox(height: 14 * s),
+                    Expanded(child: _buildLayers(s)),
                   ],
                 ),
               ),
@@ -144,222 +115,389 @@ class _Slide10State extends State<Slide10> with SingleTickerProviderStateMixin {
     );
   }
 
-  // ── Content: two columns ──────────────────────────────────────────────────
+  // -- Layers ----------------------------------------------------------------
 
-  Widget _buildContent(double s) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: _reveal(widget.step >= 1, _buildLeft(s))),
-        SizedBox(width: 20 * s),
-        Expanded(child: _reveal(widget.step >= 2, _buildRight(s))),
-      ],
-    );
-  }
+  Widget _buildLayers(double s) {
+    const cyan = Color(0xFF00C7FF);
+    const orange = Color(0xFFFF9F0A);
+    const green = Color(0xFF30D158);
 
-  // ── Left: table ───────────────────────────────────────────────────────────
-
-  Widget _buildLeft(double s) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
       children: [
-        _buildTable(s),
-        SizedBox(height: 10 * s),
-        _buildBadge(s),
-      ],
-    );
-  }
-
-  Widget _buildTable(double s) {
-    final borderColor = const Color(0xFF1E3854).withValues(alpha: 0.6);
-    final bs = BorderSide(color: borderColor, width: 0.8);
-
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: borderColor),
-        borderRadius: BorderRadius.circular(8 * s),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8 * s),
-        child: Table(
-          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-          border: TableBorder(
-            top: bs,
-            bottom: bs,
-            left: bs,
-            right: bs,
-            horizontalInside: bs,
-            verticalInside: bs,
-            borderRadius: BorderRadius.circular(8 * s),
+        // -- ENTRADA --
+        Expanded(
+          flex: 22,
+          child: _layerShell(
+            label: 'ENTRADA',
+            sublabel: 'Par\u00e2metros',
+            color: cyan,
+            visible: widget.step >= 1,
+            s: s,
+            content: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _paramBox(
+                    'entrada_rms = 220.0\nsaida_desejada = [5.0, 0.0]',
+                    cyan,
+                    s,
+                  ),
+                ),
+                SizedBox(width: 8 * s),
+                Expanded(
+                  child: _paramBox(
+                    'max_tentativas = 8000\nrandom.seed(42)',
+                    cyan,
+                    s,
+                  ),
+                ),
+                SizedBox(width: 8 * s),
+                Expanded(
+                  child: _paramBox(
+                    'resistores_comerciais[]\n161 valores (E24 \u00d7 d\u00e9cadas)',
+                    cyan,
+                    s,
+                  ),
+                ),
+              ],
+            ),
           ),
-          children: [
-            // Header row
-            TableRow(
-              decoration: BoxDecoration(
-                color: const Color(0xFF2997FF).withValues(alpha: 0.15),
-              ),
-              children: _headers
-                  .map(
-                    (h) => Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 6 * s,
-                        vertical: 7 * s,
-                      ),
-                      child: Text(
-                        h,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10 * s,
+        ),
+
+        // Arrow 1->2
+        _vArrow(widget.step >= 2, s),
+
+        // -- PROCESSAMENTO --
+        Expanded(
+          flex: 40,
+          child: _layerShell(
+            label: 'PROCESSAMENTO',
+            sublabel: 'Fun\u00e7\u00f5es Core',
+            color: orange,
+            visible: widget.step >= 2,
+            s: s,
+            content: Column(
+              children: [
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _funcBox(
+                          'gerar_resistores()',
+                          'S\u00e9rie base \u00d7 d\u00e9cadas',
+                          const Color(0xFF2997FF),
+                          s,
                         ),
                       ),
-                    ),
-                  )
-                  .toList(),
-            ),
-            // Data rows
-            ..._rows.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final row = entry.value;
-              final bg = idx.isOdd
-                  ? const Color(0xFF0A1828).withValues(alpha: 0.5)
-                  : Colors.transparent;
-              return TableRow(
-                decoration: BoxDecoration(color: bg),
-                children: row.asMap().entries.map((cell) {
-                  final isBase = cell.key == 0;
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 4 * s,
-                      vertical: 6 * s,
-                    ),
-                    child: Text(
-                      cell.value,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: isBase ? const Color(0xFFFF9F0A) : Colors.white,
-                        fontWeight: isBase
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: 10 * s,
+                      _hArrow(const Color(0xFF2997FF), s),
+                      Expanded(
+                        child: _funcBox(
+                          'calcular_ganho_ca()',
+                          'R1\u2016R2 / (R3 + R1\u2016R2)',
+                          orange,
+                          s,
+                        ),
                       ),
+                      _hArrow(orange, s),
+                      Expanded(
+                        child: _funcBox(
+                          'calcular_offset_cc()',
+                          '(R3\u2016R2 / (R1+R3\u2016R2)) \u00d7\nVcc',
+                          const Color(0xFF5AC8FA),
+                          s,
+                        ),
+                      ),
+                      _hArrow(green, s),
+                      Expanded(
+                        child: _funcBox(
+                          'circuito_valido()',
+                          '5 crit\u00e9rios',
+                          green,
+                          s,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 6 * s),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12 * s,
+                    vertical: 8 * s,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A1E38).withValues(alpha: 0.80),
+                    borderRadius: BorderRadius.circular(6 * s),
+                    border: Border.all(color: orange.withValues(alpha: 0.30)),
+                  ),
+                  child: Text(
+                    'Loop: 8000 itera\u00e7\u00f5es \u2014 sorteio aleat\u00f3rio (Monte Carlo) com seed para reprodutibilidade',
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: const Color(0xFF8EB4D8),
+                      fontSize: 10 * s,
                     ),
-                  );
-                }).toList(),
-              );
-            }),
-          ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
-    );
-  }
 
-  Widget _buildBadge(double s) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 9 * s),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFF9F0A).withValues(alpha: 0.10),
-        border: Border.all(
-          color: const Color(0xFFFF9F0A).withValues(alpha: 0.35),
-        ),
-        borderRadius: BorderRadius.circular(8 * s),
-      ),
-      child: Text(
-        'Biblioteca total: 161 resistores · Faixa: 10Ω a 82MΩ',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: const Color(0xFFFF9F0A),
-          fontSize: 11 * s,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
+        // Arrow 2->3
+        _vArrow(widget.step >= 3, s),
 
-  // ── Right: two info panels ────────────────────────────────────────────────
-
-  Widget _buildRight(double s) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _glassPanel(
-          header: 'SÉRIE E24 — COMO FUNCIONA',
-          headerColor: const Color(0xFF5AC8FA),
-          items: const [
-            '23 valores base de 10 a 82 (espaçamento logarítmico)',
-            '7 décadas de ×1 até ×1M (multiplicadores)',
-            'Total: 23 × 7 = 161 valores disponíveis para busca',
-            'Tolerância típica: ±5%',
-          ],
-          s: s,
-        ),
-        SizedBox(height: 14 * s),
-        _glassPanel(
-          header: 'POR QUE SÉRIE COMERCIAL?',
-          headerColor: const Color(0xFF5AC8FA),
-          items: const [
-            'Resistências com valores arbitrários não existem no mercado',
-            'A busca garante que o circuito pode ser montado com peças reais',
-            'Valores próximos são cobertos pela tolerância do componente',
-          ],
-          s: s,
+        // -- SAIDA --
+        Expanded(
+          flex: 22,
+          child: _layerShell(
+            label: 'SA\u00cdDA',
+            sublabel: 'Resultados',
+            color: green,
+            visible: widget.step >= 3,
+            s: s,
+            content: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _saidaBox(
+                    'pd.DataFrame()',
+                    'circuitos_encontrados',
+                    green,
+                    s,
+                  ),
+                ),
+                SizedBox(width: 8 * s),
+                Expanded(
+                  child: _saidaBox(
+                    'sort_values()',
+                    'Vout_max descrescente',
+                    green,
+                    s,
+                  ),
+                ),
+                SizedBox(width: 8 * s),
+                Expanded(
+                  child: _saidaBox('display()', 'Tabela formatada', green, s),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _glassPanel({
-    required String header,
-    required Color headerColor,
-    required List<String> items,
+  // -- Layer shell -----------------------------------------------------------
+
+  Widget _layerShell({
+    required String label,
+    required String sublabel,
+    required Color color,
+    required bool visible,
     required double s,
+    required Widget content,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0A1E38).withValues(alpha: 0.6),
-        border: Border.all(
-          color: const Color(0xFF1E4080).withValues(alpha: 0.3),
-        ),
+        color: color.withValues(alpha: 0.04),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
         borderRadius: BorderRadius.circular(12 * s),
       ),
-      padding: EdgeInsets.all(16 * s),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      padding: EdgeInsets.all(8 * s),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            header,
-            style: TextStyle(
-              color: headerColor,
-              fontSize: 11 * s,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.8,
+          SizedBox(
+            width: 80 * s,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 9 * s,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  SizedBox(height: 4 * s),
+                  Text(
+                    sublabel,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color.withValues(alpha: 0.60),
+                      fontSize: 8 * s,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          SizedBox(height: 10 * s),
-          ...items.map(
-            (item) => Padding(
-              padding: EdgeInsets.only(bottom: 7 * s),
-              child: Text(
-                '• $item',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11 * s,
-                  height: 1.5,
-                ),
-              ),
+          VerticalDivider(color: color.withValues(alpha: 0.20), width: 16 * s),
+          Expanded(child: _reveal(visible, content)),
+        ],
+      ),
+    );
+  }
+
+  // -- Param box (ENTRADA) ---------------------------------------------------
+
+  Widget _paramBox(String text, Color color, double s) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A1E38).withValues(alpha: 0.80),
+        borderRadius: BorderRadius.circular(8 * s),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 10 * s, vertical: 8 * s),
+      child: Center(
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 9 * s,
+            height: 1.6,
+            color: const Color(0xFFFFB347),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // -- Func box (PROCESSAMENTO) ----------------------------------------------
+
+  Widget _funcBox(String name, String desc, Color color, double s) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        border: Border.all(color: color.withValues(alpha: 0.50)),
+        borderRadius: BorderRadius.circular(8 * s),
+      ),
+      padding: EdgeInsets.all(8 * s),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 8.5 * s,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          SizedBox(height: 4 * s),
+          Text(
+            desc,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 8 * s,
+              height: 1.3,
+              color: const Color(0xFFE0E0E0),
             ),
           ),
         ],
       ),
     );
   }
+
+  // -- Saida box -------------------------------------------------------------
+
+  Widget _saidaBox(String name, String desc, Color color, double s) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        border: Border.all(color: color.withValues(alpha: 0.40)),
+        borderRadius: BorderRadius.circular(8 * s),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 10 * s, vertical: 8 * s),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 9.5 * s,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 4 * s),
+          Text(
+            desc,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 8.5 * s,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // -- Vertical arrow between layers -----------------------------------------
+
+  Widget _vArrow(bool visible, double s) {
+    return AnimatedOpacity(
+      opacity: visible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 380),
+      child: SizedBox(
+        height: 20 * s,
+        child: Center(
+          child: Icon(
+            Icons.arrow_downward_rounded,
+            color: const Color(0xFF8EB4D8).withValues(alpha: 0.6),
+            size: 20 * s,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // -- Horizontal arrow between func boxes -----------------------------------
+
+  Widget _hArrow(Color color, double s) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 2 * s),
+      child: Center(
+        child: Icon(
+          Icons.arrow_forward_rounded,
+          color: color.withValues(alpha: 0.7),
+          size: 14 * s,
+        ),
+      ),
+    );
+  }
 }
 
-// ── Dot Grid ──────────────────────────────────────────────────────────────────
+// -- Dot Grid ----------------------------------------------------------------
 
 class _DotGrid extends CustomPainter {
   final double s;

@@ -1,13 +1,15 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 
-class Slide07 extends StatefulWidget {
+class Slide06 extends StatefulWidget {
   final int step;
-  const Slide07({super.key, required this.step});
+  const Slide06({super.key, required this.step});
   @override
-  State<Slide07> createState() => _Slide07State();
+  State<Slide06> createState() => _Slide06State();
 }
 
-class _Slide07State extends State<Slide07> with SingleTickerProviderStateMixin {
+class _Slide06State extends State<Slide06> with SingleTickerProviderStateMixin {
   late final AnimationController _entry;
 
   @override
@@ -37,7 +39,7 @@ class _Slide07State extends State<Slide07> with SingleTickerProviderStateMixin {
   }) {
     return AnimatedBuilder(
       animation: anim,
-      builder: (_, _) => Opacity(
+      builder: (context, _) => Opacity(
         opacity: anim.value,
         child: Transform.translate(
           offset: Offset(0, dy * (1 - anim.value)),
@@ -61,201 +63,174 @@ class _Slide07State extends State<Slide07> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _stepCard(
-    int num,
-    IconData icon,
-    Color color,
-    String title,
-    String desc,
-    double s,
-  ) {
-    final visible = widget.step >= num;
+  Widget _card({
+    required double s,
+    required bool visible,
+    required String badgeNum,
+    required Color labelColor,
+    required String label,
+    required String desc,
+    required String formula,
+    String? desc2,
+    String? formula2,
+    String? additional,
+    Color? additionalColor,
+  }) {
     return _reveal(
       visible,
       Container(
+        margin: EdgeInsets.all(4 * s),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              color.withValues(alpha: 0.12),
-              color.withValues(alpha: 0.04),
-            ],
+          color: const Color(0xFF0B1929),
+          borderRadius: BorderRadius.circular(10 * s),
+          border: Border.all(
+            color: const Color(0xFF1E3854).withValues(alpha: 0.5),
+            width: 1,
           ),
-          border: Border.all(color: color.withValues(alpha: 0.35)),
-          borderRadius: BorderRadius.circular(12 * s),
         ),
-        padding: EdgeInsets.fromLTRB(16 * s, 18 * s, 16 * s, 16 * s),
+        padding: EdgeInsets.all(12 * s),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  padding: EdgeInsets.all(8 * s),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
+                  width: 24 * s,
+                  height: 24 * s,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF2997FF),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: color, size: 20 * s),
-                ),
-                const Spacer(),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 8 * s,
-                    vertical: 3 * s,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20 * s),
-                  ),
+                  alignment: Alignment.center,
                   child: Text(
-                    '0$num',
+                    badgeNum,
                     style: TextStyle(
-                      color: color,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                       fontSize: 11 * s,
-                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8 * s),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: labelColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10 * s,
                     ),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 14 * s),
+            SizedBox(height: 8 * s),
             Text(
-              title,
+              desc,
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 14 * s,
-                fontWeight: FontWeight.bold,
-                height: 1.2,
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 10 * s,
+                height: 1.4,
               ),
             ),
             SizedBox(height: 8 * s),
-            Expanded(
-              child: Text(
-                desc,
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(
+                horizontal: 12 * s,
+                vertical: 6 * s,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0x330A1E38),
+                borderRadius: BorderRadius.circular(6 * s),
+                border: Border.all(
+                  color: const Color(0xFF00BCD4).withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Center(
+                child: Math.tex(
+                  formula,
+                  textStyle: TextStyle(
+                    color: const Color(0xFF00BCD4),
+                    fontSize: 13 * s,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            if (desc2 != null) ...[
+              SizedBox(height: 6 * s),
+              Text(
+                desc2,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.65),
-                  fontSize: 11 * s,
-                  height: 1.5,
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 10 * s,
+                  height: 1.4,
                 ),
               ),
-            ),
-            SizedBox(height: 10 * s),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2 * s),
-              child: LinearProgressIndicator(
-                value: 1.0,
-                backgroundColor: color.withValues(alpha: 0.15),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  color.withValues(alpha: 0.6),
+            ],
+            if (formula2 != null) ...[
+              SizedBox(height: 6 * s),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 12 * s,
+                  vertical: 6 * s,
                 ),
-                minHeight: 3 * s,
+                decoration: BoxDecoration(
+                  color: const Color(0x330A1E38),
+                  borderRadius: BorderRadius.circular(6 * s),
+                  border: Border.all(
+                    color: const Color(0xFF00BCD4).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: Math.tex(
+                    formula2,
+                    textStyle: TextStyle(
+                      color: const Color(0xFF00BCD4),
+                      fontSize: 13 * s,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
+            if (additional != null) ...[
+              SizedBox(height: 6 * s),
+              Text(
+                additional,
+                style: TextStyle(
+                  color: additionalColor ?? Colors.white.withValues(alpha: 0.7),
+                  fontSize: 9.5 * s,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _connector(bool visible, Color from, Color to, double s) {
-    return AnimatedOpacity(
-      opacity: visible ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 400),
-      child: SizedBox(
-        width: 28 * s,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ShaderMask(
-                shaderCallback: (bounds) =>
-                    LinearGradient(colors: [from, to]).createShader(bounds),
-                child: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Colors.white,
-                  size: 18 * s,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFooter(double s) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 20 * s, vertical: 12 * s),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B1929),
-        borderRadius: BorderRadius.circular(10 * s),
-        border: Border.all(
-          color: const Color(0xFF1E3854).withValues(alpha: 0.5),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.code_rounded, color: const Color(0xFF00C7FF), size: 16 * s),
-          SizedBox(width: 10 * s),
-          RichText(
-            text: TextSpan(
-              style: TextStyle(fontSize: 12 * s),
-              children: [
-                TextSpan(
-                  text: '📓  Notebook estruturado para conversão via  ',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-                ),
-                TextSpan(
-                  text: 'nbconvert --to slides',
-                  style: TextStyle(
-                    color: const Color(0xFF00C7FF),
-                    fontFamily: 'monospace',
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextSpan(
-                  text: '  →  apresentação interativa',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    // ignore: unused_local_variable
+    final _ = sqrt(2); // dart:math used
     final titleA = _iv(0.0, 0.5);
+    final subA = _iv(0.1, 0.6);
 
     return LayoutBuilder(
       builder: (context, box) {
         final s = (box.maxWidth / 960).clamp(0.25, 2.5);
-
-        const desc1 =
-            'Faixa de saída (0–5 V), tensão RMS de entrada (220 V) e número máximo de tentativas Monte Carlo';
-        const desc2 =
-            'Expandir série base E24 × décadas de potência: lista de 161 valores comerciais disponíveis';
-        const desc3 =
-            'Ganho CA e offset CC para cada combinação (R1, R2, R3) sorteada aleatoriamente';
-        const desc4 =
-            'Validar por 5 critérios elétricos: faixa de tensão, potência máxima, resistências positivas';
-
         return DecoratedBox(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF0C1B30),
-                Color(0xFF071320),
-                Color(0xFF040D18),
-              ],
+              colors: [Color(0xFF0C1B30), Color(0xFF071320), Color(0xFF040D18)],
             ),
           ),
           child: Stack(
@@ -269,108 +244,102 @@ class _Slide07State extends State<Slide07> with SingleTickerProviderStateMixin {
                   children: [
                     _fade(
                       titleA,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Estratégia Computacional',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 28 * s,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 4 * s),
-                          Row(
-                            children: [
-                              Text(
-                                'Pipeline de busca Monte Carlo  ·  ',
-                                style: TextStyle(
-                                  color: const Color(0xFF8EB4D8),
-                                  fontSize: 13 * s,
-                                ),
-                              ),
-                              Text(
-                                '${widget.step > 0 ? widget.step * 25 : 0}% do pipeline revelado',
-                                style: TextStyle(
-                                  color: const Color(0xFF00C7FF),
-                                  fontSize: 12 * s,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                      child: Text(
+                        'Derivação Matemática do Circuito',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 26 * s,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                        ),
                       ),
                     ),
-                    SizedBox(height: 20 * s),
+                    _fade(subA, child: const SizedBox.shrink()),
+                    SizedBox(height: 12 * s),
                     Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                      child: Column(
                         children: [
                           Expanded(
-                            child: _stepCard(
-                              1,
-                              Icons.tune_rounded,
-                              const Color(0xFF2997FF),
-                              'Definir Parâmetros',
-                              desc1,
-                              s,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: _card(
+                                    s: s,
+                                    visible: widget.step >= 1,
+                                    badgeNum: '1',
+                                    labelColor: Colors.orange,
+                                    label: 'ETAPA 1: CONVERSÃO RMS → PICO',
+                                    desc:
+                                        'O valor RMS é o valor eficaz da tensão CA senoidal. Para obter o valor de pico:',
+                                    formula:
+                                        r'\mathbf{V}_{\text{pico}} = \mathbf{V}_{\text{RMS}} \times \sqrt{2}',
+                                    additional: '220 × 1,4142 ≈ 311,13 V',
+                                    additionalColor: const Color(0xFF00BCD4),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _card(
+                                    s: s,
+                                    visible: widget.step >= 2,
+                                    badgeNum: '2',
+                                    labelColor: const Color(0xFF2997FF),
+                                    label:
+                                        'ETAPA 2: GANHO CA — DIVISOR DE TENSÃO',
+                                    desc:
+                                        'Para o sinal CA, Vcc é curto-circuito (fonte ideal). R1 e R2 ficam em paralelo:',
+                                    formula:
+                                        r'\mathbf{R1 \| R2} = (R1 \times R2) \,/\, (R1 + R2)',
+                                    desc2:
+                                        'O ganho CA real do divisor R3 + (R1‖R2):',
+                                    formula2:
+                                        r'\mathbf{G}_{\text{CA}} = R1\|R2 \,/\, (R3 + R1\|R2)',
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          _connector(
-                            widget.step >= 2,
-                            const Color(0xFF2997FF),
-                            const Color(0xFFBF5AF2),
-                            s,
-                          ),
                           Expanded(
-                            child: _stepCard(
-                              2,
-                              Icons.memory_rounded,
-                              const Color(0xFFBF5AF2),
-                              'Gerar Resistores',
-                              desc2,
-                              s,
-                            ),
-                          ),
-                          _connector(
-                            widget.step >= 3,
-                            const Color(0xFFBF5AF2),
-                            const Color(0xFFFF453A),
-                            s,
-                          ),
-                          Expanded(
-                            child: _stepCard(
-                              3,
-                              Icons.calculate_rounded,
-                              const Color(0xFFFF453A),
-                              'Calcular Saídas',
-                              desc3,
-                              s,
-                            ),
-                          ),
-                          _connector(
-                            widget.step >= 4,
-                            const Color(0xFFFF453A),
-                            const Color(0xFF30D158),
-                            s,
-                          ),
-                          Expanded(
-                            child: _stepCard(
-                              4,
-                              Icons.filter_alt_rounded,
-                              const Color(0xFF30D158),
-                              'Filtrar Circuitos',
-                              desc4,
-                              s,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: _card(
+                                    s: s,
+                                    visible: widget.step >= 3,
+                                    badgeNum: '3',
+                                    labelColor: Colors.green,
+                                    label: 'ETAPA 3: OFFSET CC — NÍVEL DC',
+                                    desc:
+                                        'Para CC, a entrada CA é zero. O offset vem de Vcc através de R1. R3 e R2 ficam em paralelo vistos de R1:',
+                                    formula:
+                                        r'\mathbf{V}_{\text{cc}} = [R3\|R2 \,/\, (R1 + R3\|R2)] \times Vcc',
+                                    additional:
+                                        'Este nível DC desloca a senóide para que o vale fique próximo de 0V.',
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _card(
+                                    s: s,
+                                    visible: widget.step >= 4,
+                                    badgeNum: '4',
+                                    labelColor: Colors.red,
+                                    label: 'ETAPA 4: SAÍDA FINAL COMBINADA',
+                                    desc:
+                                        'Superposição: somamos a componente CA atenuada com o offset CC:',
+                                    formula:
+                                        r'\mathbf{V}_{\text{out}} = V_{\text{CC}} + G_{\text{CA}} \times V_{\text{pico}}',
+                                    additional:
+                                        'Critério: 0 ≤ Vout ≤ 5V para compatibilidade com ADC.',
+                                    additionalColor: Colors.green,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 16 * s),
-                    _reveal(widget.step >= 1, _buildFooter(s)),
                   ],
                 ),
               ),
@@ -385,7 +354,6 @@ class _Slide07State extends State<Slide07> with SingleTickerProviderStateMixin {
 class _DotGrid extends CustomPainter {
   final double s;
   const _DotGrid({required this.s});
-
   @override
   void paint(Canvas canvas, Size size) {
     final p = Paint()

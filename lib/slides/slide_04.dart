@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_math_fork/flutter_math.dart';
 
-class Slide04 extends StatefulWidget {
+class Slide03 extends StatefulWidget {
   final int step;
-  const Slide04({super.key, this.step = 0});
+  const Slide03({super.key, this.step = 0});
   @override
-  State<Slide04> createState() => _Slide04State();
+  State<Slide03> createState() => _Slide03State();
 }
 
-class _Slide04State extends State<Slide04> with TickerProviderStateMixin {
+class _Slide03State extends State<Slide03> with TickerProviderStateMixin {
   late final AnimationController _entry;
 
   @override
@@ -61,47 +60,29 @@ class _Slide04State extends State<Slide04> with TickerProviderStateMixin {
     );
   }
 
-  Widget _glassPanel({required double s, required Widget child}) {
+  Widget _card({
+    required double s,
+    required Color border,
+    required Widget child,
+  }) {
     return Container(
       padding: EdgeInsets.all(20 * s),
       decoration: BoxDecoration(
-        color: const Color(0xFF0A1E38).withValues(alpha: 0.6),
+        color: const Color(0xFF0A1E38).withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(12 * s),
-        border: Border.all(
-          color: const Color(0xFF1E4080).withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: border.withValues(alpha: 0.7), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: border.withValues(alpha: 0.12), blurRadius: 16 * s),
+        ],
       ),
       child: child,
-    );
-  }
-
-  Widget _formulaBox({
-    required double s,
-    required String latex,
-    required Color color,
-    double? fontSize,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 10 * s),
-      decoration: BoxDecoration(
-        color: const Color(0xFF041020).withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(8 * s),
-        border: Border.all(color: color.withValues(alpha: 0.45)),
-      ),
-      child: Center(
-        child: Math.tex(
-          latex,
-          textStyle: TextStyle(color: color, fontSize: (fontSize ?? 18) * s),
-        ),
-      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final titleA = _iv(0.00, 0.40);
+    final subA = _iv(0.15, 0.55);
     final step = widget.step;
 
     return LayoutBuilder(
@@ -132,12 +113,25 @@ class _Slide04State extends State<Slide04> with TickerProviderStateMixin {
                       titleA,
                       dy: -20.0 * s,
                       child: Text(
-                        'Formulação do Problema',
+                        'Contexto do Problema',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 36 * s,
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.4,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 6 * s),
+                    _fade(
+                      subA,
+                      dy: 12.0 * s,
+                      child: Text(
+                        'Adaptar um sinal de alta tensão para uma faixa segura de leitura digital usando uma rede resistiva.',
+                        style: TextStyle(
+                          color: const Color(0xFF7B8EA2),
+                          fontSize: 12.5 * s,
+                          height: 1.4,
                         ),
                       ),
                     ),
@@ -156,169 +150,170 @@ class _Slide04State extends State<Slide04> with TickerProviderStateMixin {
   Widget _buildContent(double s, int step) {
     const teal = Color(0xFF00BFA5);
     const orange = Color(0xFFFF9F0A);
+    const green = Color(0xFF30D158);
+    const red = Color(0xFFFF453A);
 
-    return Column(
-      children: [
-        Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Left panel — RMS to peak conversion
-              Expanded(
-                child: _reveal(
-                  1,
-                  _glassPanel(
-                    s: s,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CONVERSÃO RMS → PICO',
-                          style: TextStyle(
-                            color: teal,
-                            fontSize: 10 * s,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        SizedBox(height: 10 * s),
-                        Text(
-                          'Para obter o valor instantâneo máximo:',
-                          style: TextStyle(
-                            color: const Color(0xFF7B8EA2),
-                            fontSize: 12 * s,
-                            height: 1.5,
-                          ),
-                        ),
-                        SizedBox(height: 12 * s),
-                        _formulaBox(
-                          s: s,
-                          latex:
-                              r'\mathbf{V}_{\text{pico}} = \mathbf{V}_{\text{RMS}} \times \sqrt{2}',
-                          color: teal,
-                        ),
-                        SizedBox(height: 12 * s),
-                        Text(
-                          'Para 220 V RMS:',
-                          style: TextStyle(
-                            color: const Color(0xFF7B8EA2),
-                            fontSize: 12 * s,
-                            height: 1.5,
-                          ),
-                        ),
-                        SizedBox(height: 8 * s),
-                        _formulaBox(
-                          s: s,
-                          latex:
-                              r'\mathbf{V}_{\text{pico}} \approx 311{,}13 \text{ V}',
-                          color: orange,
-                          fontSize: 22,
-                        ),
-                      ],
+    return Center(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Card 1 — ENTRADA
+          Expanded(
+            flex: 5,
+            child: _reveal(
+              1,
+              _card(
+                s: s,
+                border: orange,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ENTRADA',
+                      style: TextStyle(
+                        color: orange,
+                        fontSize: 10 * s,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
                     ),
-                  ),
-                ),
-              ),
-
-              SizedBox(width: 16 * s),
-
-              // Right panel — conditioning requirements
-              Expanded(
-                child: _reveal(
-                  2,
-                  _glassPanel(
-                    s: s,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CIRCUITO CONDICIONADOR',
-                          style: TextStyle(
-                            color: orange,
-                            fontSize: 10 * s,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        SizedBox(height: 10 * s),
-                        Text(
-                          'A rede resistiva deve:',
-                          style: TextStyle(
-                            color: const Color(0xFF7B8EA2),
-                            fontSize: 12 * s,
-                            height: 1.5,
-                          ),
-                        ),
-                        SizedBox(height: 10 * s),
-                        _arrowBullet(
-                          'Atenuar o sinal CA de ±311 V para ±2,5 V',
-                          s,
-                        ),
-                        SizedBox(height: 6 * s),
-                        _arrowBullet('Adicionar offset CC de +2,5 V', s),
-                        SizedBox(height: 6 * s),
-                        _arrowBullet('Resultado: saída entre 0 V e 5 V', s),
-                        SizedBox(height: 6 * s),
-                        _arrowBullet(
-                          'Usar apenas resistores comerciais (R1, R2, R3)',
-                          s,
-                        ),
-                      ],
+                    SizedBox(height: 8 * s),
+                    Text(
+                      '220 V',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 48 * s,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                      ),
                     ),
-                  ),
+                    SizedBox(height: 6 * s),
+                    Text(
+                      'RMS (tensão alternada\nda rede elétrica)',
+                      style: TextStyle(
+                        color: const Color(0xFF7B8EA2),
+                        fontSize: 12 * s,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        ),
-
-        SizedBox(height: 12 * s),
-
-        // Warning banner
-        _reveal(
-          3,
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 12 * s),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFF9F0A).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8 * s),
-              border: Border.all(
-                color: const Color(0xFFFF9F0A).withValues(alpha: 0.45),
               ),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: const Color(0xFFFF9F0A),
-                  size: 20 * s,
-                ),
-                SizedBox(width: 12 * s),
-                Expanded(
-                  child: Text(
-                    'O sinal de entrada possui semiciclos positivo (+311 V) e negativo (−311 V) — ambos devem ser mapeados para 0–5 V',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12 * s,
-                      height: 1.5,
+          ),
+
+          // Arrow 1 — visible when card 2 is visible
+          Expanded(
+            flex: 2,
+            child: _reveal(2, _ArrowWidget(color: teal, s: s)),
+          ),
+
+          // Card 2 — SAÍDA DESEJADA
+          Expanded(
+            flex: 5,
+            child: _reveal(
+              2,
+              _card(
+                s: s,
+                border: green,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SAÍDA DESEJADA',
+                      style: TextStyle(
+                        color: green,
+                        fontSize: 10 * s,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
                     ),
-                  ),
+                    SizedBox(height: 8 * s),
+                    Text(
+                      '0 a 5 V',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 48 * s,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                      ),
+                    ),
+                    SizedBox(height: 6 * s),
+                    Text(
+                      'Faixa compatível com\ndispositivo digital (ADC)',
+                      style: TextStyle(
+                        color: const Color(0xFF7B8EA2),
+                        fontSize: 12 * s,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ],
+
+          // Arrow 2 — visible when card 3 is visible
+          Expanded(
+            flex: 2,
+            child: _reveal(3, _ArrowWidget(color: teal, s: s)),
+          ),
+
+          // Card 3 — ESTRATÉGIA
+          Expanded(
+            flex: 5,
+            child: _reveal(
+              3,
+              _card(
+                s: s,
+                border: red,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ESTRATÉGIA',
+                      style: TextStyle(
+                        color: red,
+                        fontSize: 10 * s,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    SizedBox(height: 8 * s),
+                    Text(
+                      'Rede Resistiva',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20 * s,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                    ),
+                    SizedBox(height: 10 * s),
+                    _bullet('Atenuar componente CA', s),
+                    SizedBox(height: 4 * s),
+                    _bullet('Introduzir offset CC', s),
+                    SizedBox(height: 4 * s),
+                    _bullet('Manter saída na faixa', s),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _arrowBullet(String text, double s) {
+  Widget _bullet(String text, double s) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '\u25B8 ',
+          '• ',
           style: TextStyle(
             color: const Color(0xFF7B8EA2),
             fontSize: 12 * s,
@@ -338,6 +333,56 @@ class _Slide04State extends State<Slide04> with TickerProviderStateMixin {
       ],
     );
   }
+}
+
+// ── Arrow Widget ───────────────────────────────────────────────────────────────
+
+class _ArrowWidget extends StatelessWidget {
+  final Color color;
+  final double s;
+  const _ArrowWidget({required this.color, required this.s});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: CustomPaint(
+        size: Size(40 * s, 24 * s),
+        painter: _ArrowPainter(color: color),
+      ),
+    );
+  }
+}
+
+class _ArrowPainter extends CustomPainter {
+  final Color color;
+  const _ArrowPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final fill = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final line = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
+
+    final midY = size.height / 2;
+    final arrowW = size.width * 0.35;
+
+    canvas.drawLine(Offset(0, midY), Offset(size.width - arrowW, midY), line);
+
+    final path = Path()
+      ..moveTo(size.width, midY)
+      ..lineTo(size.width - arrowW, midY - size.height * 0.4)
+      ..lineTo(size.width - arrowW, midY + size.height * 0.4)
+      ..close();
+    canvas.drawPath(path, fill);
+  }
+
+  @override
+  bool shouldRepaint(_ArrowPainter o) => o.color != color;
 }
 
 // ── Dot Grid ──────────────────────────────────────────────────────────────────

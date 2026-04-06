@@ -64,20 +64,20 @@ class PresentationScreen extends StatefulWidget {
 // Ordem: 0=Slide01, 1=Slide17(Python-cos/sin), 2=Slide02, 3=Slide03, ...
 int _maxSubStep(int slide) {
   const steps = {
-    2: 5, // Cadeia de Medição  (era slide 2, agora index 2)
-    3: 3, // Contexto do Problema
-    4: 3, // Formulação do Problema
-    5: 2, // Esquemático
-    6: 4, // Derivação Matemática
-    7: 4, // Estratégia Computacional
-    8: 0, // Fluxograma
-    9: 3, // Arquitetura do Software
-    10: 2, // Série E24
-    11: 2, // Implementação Python
-    12: 2, // Funções Auxiliares
-    13: 2, // Busca Aleatória
-    14: 2, // Análise Resultados
-    15: 2, // Segurança Elétrica
+    1: 5, // Cadeia de Medição  (era slide 2, agora index 2)
+    2: 3, // Contexto do Problema
+    3: 3, // Formulação do Problema
+    4: 2, // Esquemático
+    5: 4, // Derivação Matemática
+    6: 4, // Estratégia Computacional
+    7: 0, // Fluxograma
+    8: 3, // Arquitetura do Software
+    9: 2, // Série E24
+    10: 2, // Implementação Python
+    11: 2, // Funções Auxiliares
+    12: 2, // Busca Aleatória
+    13: 2, // Análise Resultados
+    14: 2, // Segurança Elétrica
   };
   return steps[slide] ?? 0;
 }
@@ -556,22 +556,22 @@ class _SlideFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     // Slide 1 = capa, Slide 2 = Python cos/sin (Slide17), depois restantes
     if (slideIndex == 0) return const Slide01();
-    if (slideIndex == 1) return const Slide17(); // Python cos/sin
-    if (slideIndex == 2) return Slide02(step: subStep);
-    if (slideIndex == 3) return Slide03(step: subStep);
-    if (slideIndex == 4) return Slide04(step: subStep);
-    if (slideIndex == 5) return Slide05(step: subStep);
-    if (slideIndex == 6) return Slide06(step: subStep);
-    if (slideIndex == 7) return Slide07(step: subStep);
-    if (slideIndex == 8) return Slide08(step: subStep);
-    if (slideIndex == 9) return Slide09(step: subStep);
-    if (slideIndex == 10) return Slide10(step: subStep);
-    if (slideIndex == 11) return Slide11(step: subStep);
-    if (slideIndex == 12) return Slide12(step: subStep);
-    if (slideIndex == 13) return Slide13(step: subStep);
-    if (slideIndex == 14) return Slide14(step: subStep);
-    if (slideIndex == 15) return Slide15(step: subStep);
-    if (slideIndex == 16) return const Slide16();
+    if (slideIndex == 1) return const Slide02(); // Python cos/sin
+    if (slideIndex == 2) return Slide03(step: subStep);
+    if (slideIndex == 3) return Slide04(step: subStep);
+    if (slideIndex == 4) return Slide05(step: subStep);
+    if (slideIndex == 5) return Slide06(step: subStep);
+    if (slideIndex == 6) return Slide07(step: subStep);
+    if (slideIndex == 7) return Slide08(step: subStep);
+    if (slideIndex == 8) return Slide09(step: subStep);
+    if (slideIndex == 9) return Slide10(step: subStep);
+    if (slideIndex == 10) return Slide11(step: subStep);
+    if (slideIndex == 11) return Slide12(step: subStep);
+    if (slideIndex == 12) return Slide13(step: subStep);
+    if (slideIndex == 13) return Slide14(step: subStep);
+    if (slideIndex == 14) return Slide15(step: subStep);
+    if (slideIndex == 15) return Slide16();
+    if (slideIndex == 16) return const Slide17();
 
     final path =
         'assets/pdf_slide_${(slideIndex + 1).toString().padLeft(2, '0')}.png';

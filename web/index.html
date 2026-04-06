@@ -75,6 +75,17 @@
         // Carrega pacotes necessários ANTES de redirecionar stdout
         await window._pyodide.loadPackagesFromImports(code);
 
+        // Configurar matplotlib para backend Agg (não-interativo) e suprimir show()
+        try {
+          window._pyodide.runPython(`
+import matplotlib as __mpl
+__mpl.use('agg')
+import matplotlib.pyplot as __plt
+# Substituir show() para não abrir janela interativa
+__plt.show = lambda *a, **kw: None
+`);
+        } catch (_) { /* matplotlib pode não estar disponível */ }
+
         // Redirecionar stdout/stderr e suprimir DeprecationWarnings
         window._pyodide.runPython(`
 import sys as __sys, io as __io, warnings as __warnings
@@ -94,10 +105,34 @@ __sys.stderr = __buf
         }
 
         const captured = window._pyodide.runPython('__buf.getvalue()');
+
+        // Capturar figuras matplotlib como imagens base64 PNG
+        let plotsB64 = '';
+        try {
+          plotsB64 = window._pyodide.runPython(`
+import base64 as __b64, io as __bio
+import matplotlib.pyplot as __plt2
+__plot_list = []
+for __fnum in __plt2.get_fignums():
+    __fig = __plt2.figure(__fnum)
+    __bbuf = __bio.BytesIO()
+    __fig.savefig(__bbuf, format='png', dpi=150, bbox_inches='tight',
+                  facecolor='#0C1B30', edgecolor='none')
+    __bbuf.seek(0)
+    __plot_list.append(__b64.b64encode(__bbuf.read()).decode('utf-8'))
+    __bbuf.close()
+__plt2.close('all')
+'|||'.join(__plot_list) if __plot_list else ''
+`) || '';
+        } catch (_) { /* matplotlib pode não estar disponível */ }
+
         const combined = (captured || '') + errorMsg;
+        const finalOutput = plotsB64
+          ? (combined.trim() !== '' ? combined + '\n__PLOT_DATA__\n' + plotsB64 : '__PLOT_DATA__\n' + plotsB64)
+          : (combined.trim() !== '' ? combined : '(sem saída)');
         window._pyResult = JSON.stringify({
           success: success,
-          output: combined.trim() !== '' ? combined : '(sem saída)'
+          output: finalOutput
         });
       } catch (e) {
         window._pyResult = JSON.stringify({

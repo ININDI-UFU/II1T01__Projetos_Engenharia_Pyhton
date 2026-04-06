@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 
-class Slide05 extends StatefulWidget {
+class Slide04 extends StatefulWidget {
   final int step;
-  const Slide05({super.key, this.step = 0});
+  const Slide04({super.key, this.step = 0});
   @override
-  State<Slide05> createState() => _Slide05State();
+  State<Slide04> createState() => _Slide04State();
 }
 
-class _Slide05State extends State<Slide05> with TickerProviderStateMixin {
+class _Slide04State extends State<Slide04> with TickerProviderStateMixin {
   late final AnimationController _entry;
 
   @override
@@ -60,6 +61,44 @@ class _Slide05State extends State<Slide05> with TickerProviderStateMixin {
     );
   }
 
+  Widget _glassPanel({required double s, required Widget child}) {
+    return Container(
+      padding: EdgeInsets.all(20 * s),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A1E38).withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12 * s),
+        border: Border.all(
+          color: const Color(0xFF1E4080).withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _formulaBox({
+    required double s,
+    required String latex,
+    required Color color,
+    double? fontSize,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 10 * s),
+      decoration: BoxDecoration(
+        color: const Color(0xFF041020).withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(8 * s),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
+      ),
+      child: Center(
+        child: Math.tex(
+          latex,
+          textStyle: TextStyle(color: color, fontSize: (fontSize ?? 18) * s),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final titleA = _iv(0.00, 0.40);
@@ -93,7 +132,7 @@ class _Slide05State extends State<Slide05> with TickerProviderStateMixin {
                       titleA,
                       dy: -20.0 * s,
                       child: Text(
-                        'Esquemático do Circuito Condicionador',
+                        'Formulação do Problema',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 36 * s,
@@ -115,257 +154,190 @@ class _Slide05State extends State<Slide05> with TickerProviderStateMixin {
   }
 
   Widget _buildContent(double s, int step) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    const teal = Color(0xFF00BFA5);
+    const orange = Color(0xFFFF9F0A);
+
+    return Column(
       children: [
-        // Left — circuit diagram
-        Expanded(child: _reveal(1, _buildCircuitPanel(s))),
-        SizedBox(width: 16 * s),
-        // Right — component descriptions
-        Expanded(child: _reveal(2, _buildInfoPanel(s))),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Left panel — RMS to peak conversion
+              Expanded(
+                child: _reveal(
+                  1,
+                  _glassPanel(
+                    s: s,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CONVERSÃO RMS → PICO',
+                          style: TextStyle(
+                            color: teal,
+                            fontSize: 10 * s,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        SizedBox(height: 10 * s),
+                        Text(
+                          'Para obter o valor instantâneo máximo:',
+                          style: TextStyle(
+                            color: const Color(0xFF7B8EA2),
+                            fontSize: 12 * s,
+                            height: 1.5,
+                          ),
+                        ),
+                        SizedBox(height: 12 * s),
+                        _formulaBox(
+                          s: s,
+                          latex:
+                              r'\mathbf{V}_{\text{pico}} = \mathbf{V}_{\text{RMS}} \times \sqrt{2}',
+                          color: teal,
+                        ),
+                        SizedBox(height: 12 * s),
+                        Text(
+                          'Para 220 V RMS:',
+                          style: TextStyle(
+                            color: const Color(0xFF7B8EA2),
+                            fontSize: 12 * s,
+                            height: 1.5,
+                          ),
+                        ),
+                        SizedBox(height: 8 * s),
+                        _formulaBox(
+                          s: s,
+                          latex:
+                              r'\mathbf{V}_{\text{pico}} \approx 311{,}13 \text{ V}',
+                          color: orange,
+                          fontSize: 22,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(width: 16 * s),
+
+              // Right panel — conditioning requirements
+              Expanded(
+                child: _reveal(
+                  2,
+                  _glassPanel(
+                    s: s,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CIRCUITO CONDICIONADOR',
+                          style: TextStyle(
+                            color: orange,
+                            fontSize: 10 * s,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        SizedBox(height: 10 * s),
+                        Text(
+                          'A rede resistiva deve:',
+                          style: TextStyle(
+                            color: const Color(0xFF7B8EA2),
+                            fontSize: 12 * s,
+                            height: 1.5,
+                          ),
+                        ),
+                        SizedBox(height: 10 * s),
+                        _arrowBullet(
+                          'Atenuar o sinal CA de ±311 V para ±2,5 V',
+                          s,
+                        ),
+                        SizedBox(height: 6 * s),
+                        _arrowBullet('Adicionar offset CC de +2,5 V', s),
+                        SizedBox(height: 6 * s),
+                        _arrowBullet('Resultado: saída entre 0 V e 5 V', s),
+                        SizedBox(height: 6 * s),
+                        _arrowBullet(
+                          'Usar apenas resistores comerciais (R1, R2, R3)',
+                          s,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(height: 12 * s),
+
+        // Warning banner
+        _reveal(
+          3,
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 12 * s),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF9F0A).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8 * s),
+              border: Border.all(
+                color: const Color(0xFFFF9F0A).withValues(alpha: 0.45),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: const Color(0xFFFF9F0A),
+                  size: 20 * s,
+                ),
+                SizedBox(width: 12 * s),
+                Expanded(
+                  child: Text(
+                    'O sinal de entrada possui semiciclos positivo (+311 V) e negativo (−311 V) — ambos devem ser mapeados para 0–5 V',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12 * s,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildCircuitPanel(double s) {
-    return Container(
-      padding: EdgeInsets.all(12 * s),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0A1E38).withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12 * s),
-        border: Border.all(
-          color: const Color(0xFF1E4080).withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: const CustomPaint(
-        painter: _CircuitPainter(),
-        child: SizedBox.expand(),
-      ),
-    );
-  }
-
-  Widget _buildInfoPanel(double s) {
-    const teal = Color(0xFF00BFA5);
-    const orange = Color(0xFFFF9F0A);
-    const green = Color(0xFF30D158);
-    const purple = Color(0xFF9B7BE8);
-
-    return Container(
-      padding: EdgeInsets.all(20 * s),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0A1E38).withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12 * s),
-        border: Border.all(
-          color: const Color(0xFF1E4080).withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'FUNÇÃO DOS COMPONENTES',
-            style: TextStyle(
-              color: teal,
-              fontSize: 10 * s,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
-            ),
-          ),
-          SizedBox(height: 16 * s),
-          _infoItem(
-            s,
-            'R3 (Série)',
-            orange,
-            'Atenua o sinal CA. Forma divisor de tensão com R1‖R2.',
-          ),
-          SizedBox(height: 14 * s),
-          _infoItem(
-            s,
-            'R1 (para Vcc)',
-            green,
-            'Introduz offset CC positivo. Eleva o sinal para faixa 0-5V.',
-          ),
-          SizedBox(height: 14 * s),
-          _infoItem(
-            s,
-            'R2 (para GND)',
-            purple,
-            'Completa divisor de tensão. R2 = R1 simplifica o cálculo.',
-          ),
-          SizedBox(height: 14 * s),
-          _infoItem(
-            s,
-            'Vout',
-            orange,
-            'Vcc + ganho_CA × Vpico. Deve ficar entre 0V e 5V.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoItem(double s, String title, Color color, String desc) {
-    return Container(
-      padding: EdgeInsets.only(left: 10 * s),
-      decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(color: color, width: 3 * s),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: color,
-              fontSize: 12 * s,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: 3 * s),
-          Text(
-            desc,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 11 * s,
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Circuit Painter ────────────────────────────────────────────────────────────
-// Reference SVG viewBox: 0 0 560 420
-// Coordinates are scaled by (canvasWidth/560) and (canvasHeight/420).
-
-class _CircuitPainter extends CustomPainter {
-  const _CircuitPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double sx = size.width / 560;
-    final double sy = size.height / 420;
-
-    Offset o(double x, double y) => Offset(x * sx, y * sy);
-
-    RRect rr(double x, double y, double w, double h) => RRect.fromRectAndRadius(
-      Rect.fromLTWH(x * sx, y * sy, w * sx, h * sy),
-      Radius.circular(4 * sx),
-    );
-
-    Paint stroke(Color c) => Paint()
-      ..color = c
-      ..strokeWidth = 1.5 * sx
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    Paint fillP(Color c) => Paint()
-      ..color = c
-      ..style = PaintingStyle.fill;
-
-    const wireColor = Color(0xFF6A8FA8);
-    const cyan = Color(0xFF00BFA5);
-    const orange = Color(0xFFFF9F0A);
-    const blue = Color(0xFF5B9BD5);
-    const green = Color(0xFF30D158);
-    const purple = Color(0xFF9B7BE8);
-    const bgColor = Color(0xFF081828);
-
-    final wireP = stroke(wireColor);
-
-    // ── 1. Wires (drawn first so component fills cover their ends) ────────────
-
-    // 220V source right edge → R3 left edge
-    canvas.drawLine(o(105, 220), o(150, 220), wireP);
-    // R3 right edge → junction node
-    canvas.drawLine(o(250, 220), o(320, 220), wireP);
-    // Junction → Vout box left edge
-    canvas.drawLine(o(320, 220), o(385, 220), wireP);
-    // Junction up → R1 bottom edge
-    canvas.drawLine(o(320, 215), o(320, 175), wireP);
-    // R1 top edge → Vcc bottom edge
-    canvas.drawLine(o(320, 110), o(320, 83), wireP);
-    // Junction down → R2 top edge
-    canvas.drawLine(o(320, 225), o(320, 280), wireP);
-    // R2 bottom edge → GND top edge
-    canvas.drawLine(o(320, 345), o(320, 375), wireP);
-    // Vout right edge → ADC left edge
-    canvas.drawLine(o(460, 220), o(480, 220), wireP);
-
-    // ── 2. Component background fills (covers wire ends inside boxes) ─────────
-
-    final bg = fillP(bgColor.withValues(alpha: 0.85));
-    canvas.drawCircle(o(70, 220), 35 * sx, bg);
-    canvas.drawRRect(rr(150, 195, 100, 50), bg);
-    canvas.drawRRect(rr(290, 110, 60, 65), bg);
-    canvas.drawRRect(rr(285, 55, 70, 28), bg);
-    canvas.drawRRect(rr(290, 280, 60, 65), bg);
-    canvas.drawRRect(rr(290, 375, 60, 25), bg);
-    canvas.drawRRect(rr(385, 198, 75, 44), bg);
-    canvas.drawRRect(rr(480, 195, 70, 50), bg);
-
-    // ── 3. Component borders ──────────────────────────────────────────────────
-
-    canvas.drawCircle(o(70, 220), 35 * sx, stroke(cyan)); // 220V source
-    canvas.drawRRect(rr(150, 195, 100, 50), stroke(orange)); // R3
-    canvas.drawRRect(rr(290, 110, 60, 65), stroke(blue)); // R1
-    canvas.drawRRect(rr(285, 55, 70, 28), stroke(green)); // +Vcc
-    canvas.drawRRect(rr(290, 280, 60, 65), stroke(purple)); // R2
-    canvas.drawRRect(rr(290, 375, 60, 25), stroke(orange)); // GND
-    canvas.drawRRect(rr(385, 198, 75, 44), stroke(orange)); // Vout
-    canvas.drawRRect(rr(480, 195, 70, 50), stroke(green)); // ADC
-
-    // ── 4. Arrowhead: Vout → ADC ──────────────────────────────────────────────
-
-    final arrowHead = Path()
-      ..moveTo(o(484, 220).dx, o(484, 220).dy)
-      ..lineTo(o(479, 215).dx, o(479, 215).dy)
-      ..lineTo(o(479, 225).dx, o(479, 225).dy)
-      ..close();
-    canvas.drawPath(arrowHead, fillP(wireColor));
-
-    // ── 5. Junction node dot ──────────────────────────────────────────────────
-
-    canvas.drawCircle(o(320, 220), 5 * sx, fillP(Colors.white));
-    canvas.drawCircle(o(320, 220), 5 * sx, stroke(wireColor));
-
-    // ── 6. Text labels ────────────────────────────────────────────────────────
-
-    void label(String text, double cx, double cy, Color color, double fs) {
-      final tp = TextPainter(
-        text: TextSpan(
-          text: text,
+  Widget _arrowBullet(String text, double s) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '\u25B8 ',
           style: TextStyle(
-            color: color,
-            fontSize: fs * sx,
-            fontWeight: FontWeight.w600,
-            height: 1.25,
+            color: const Color(0xFF7B8EA2),
+            fontSize: 12 * s,
+            height: 1.5,
           ),
         ),
-        textDirection: TextDirection.ltr,
-        textAlign: TextAlign.center,
-      )..layout(maxWidth: 90 * sx);
-      tp.paint(canvas, o(cx, cy) - Offset(tp.width / 2, tp.height / 2));
-    }
-
-    label('220V\nRMS', 70, 220, cyan, 9.5);
-    label('R3', 200, 220, orange, 13);
-    label('R1', 320, 142, blue, 13);
-    label('+Vcc\n(5V)', 320, 69, green, 9);
-    label('R2', 320, 312, purple, 13);
-    label('GND', 320, 387, orange, 9);
-    label('Vout\n0–5V', 422, 220, orange, 9);
-    label('ADC', 515, 220, green, 13);
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12 * s,
+              height: 1.5,
+            ),
+          ),
+        ),
+      ],
+    );
   }
-
-  @override
-  bool shouldRepaint(_CircuitPainter old) => false;
 }
 
 // ── Dot Grid ──────────────────────────────────────────────────────────────────

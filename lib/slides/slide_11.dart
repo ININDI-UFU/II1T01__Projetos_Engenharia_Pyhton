@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class Slide11 extends StatefulWidget {
+class Slide10 extends StatefulWidget {
   final int step;
-  const Slide11({super.key, required this.step});
+  const Slide10({super.key, required this.step});
 
   @override
-  State<Slide11> createState() => _Slide11State();
+  State<Slide10> createState() => _Slide10State();
 }
 
-class _Slide11State extends State<Slide11> with SingleTickerProviderStateMixin {
+class _Slide10State extends State<Slide10> with SingleTickerProviderStateMixin {
   late final AnimationController _entry;
 
   @override
@@ -60,153 +60,29 @@ class _Slide11State extends State<Slide11> with SingleTickerProviderStateMixin {
     );
   }
 
-  // ── Syntax highlight colours ──────────────────────────────────────────────
+  // ── Table data ────────────────────────────────────────────────────────────
 
-  static const _kw = Color(0xFFFF7B72); // keywords
-  static const _cmt = Color(0xFF8B949E); // comments
-  static const _num = Color(0xFF79C0FF); // numbers
-  static const _reg = Color(0xFFE0E0E0); // regular code
+  static const _headers = [
+    'Base',
+    '×1',
+    '×10',
+    '×100',
+    '×1k',
+    '×10k',
+    '×100k',
+    '×1M',
+  ];
 
-  // ── Left code: imports & constants ───────────────────────────────────────
-
-  List<InlineSpan> _leftSpans(double s) {
-    ts(String t, Color c) => TextSpan(
-      text: t,
-      style: TextStyle(
-        color: c,
-        fontFamily: 'monospace',
-        fontSize: 11 * s,
-        height: 1.6,
-      ),
-    );
-    return [
-      ts('import', _kw),
-      ts(' random\n', _reg),
-      ts('import', _kw),
-      ts(' math\n', _reg),
-      ts('import', _kw),
-      ts(' pandas ', _reg),
-      ts('as', _kw),
-      ts(' pd\n\n', _reg),
-      ts('# Parâmetros de entrada\n', _cmt),
-      ts('entrada_rms    = ', _reg),
-      ts('220.0', _num),
-      ts('\n', _reg),
-      ts('saida          = [', _reg),
-      ts('5.0', _num),
-      ts(', ', _reg),
-      ts('0.0', _num),
-      ts(']\n', _reg),
-      ts('Vcc            = ', _reg),
-      ts('5.0', _num),
-      ts('\n', _reg),
-      ts('max_tentativas = ', _reg),
-      ts('8000', _num),
-      ts('\n', _reg),
-      ts('random', _reg),
-      ts('.seed(', _reg),
-      ts('42', _num),
-      ts(')\n', _reg),
-    ];
-  }
-
-  // ── Right code: gerar_resistores ─────────────────────────────────────────
-
-  List<InlineSpan> _rightSpans(double s) {
-    ts(String t, Color c) => TextSpan(
-      text: t,
-      style: TextStyle(
-        color: c,
-        fontFamily: 'monospace',
-        fontSize: 11 * s,
-        height: 1.6,
-      ),
-    );
-    return [
-      ts('def', _kw),
-      ts(' gerar_resistores():\n', _reg),
-      ts('    bases_e24 = [\n', _reg),
-      ts('        ', _reg),
-      ts('10', _num),
-      ts(', ', _reg),
-      ts('11', _num),
-      ts(', ', _reg),
-      ts('12', _num),
-      ts(', ', _reg),
-      ts('13', _num),
-      ts(', ', _reg),
-      ts('15', _num),
-      ts(',\n', _reg),
-      ts('        ', _reg),
-      ts('16', _num),
-      ts(', ', _reg),
-      ts('18', _num),
-      ts(', ', _reg),
-      ts('20', _num),
-      ts(', ', _reg),
-      ts('22', _num),
-      ts(', ', _reg),
-      ts('24', _num),
-      ts(',\n', _reg),
-      ts('        ', _reg),
-      ts('27', _num),
-      ts(', ', _reg),
-      ts('30', _num),
-      ts(', ', _reg),
-      ts('33', _num),
-      ts(', ', _reg),
-      ts('36', _num),
-      ts(', ', _reg),
-      ts('39', _num),
-      ts(',\n', _reg),
-      ts('        ', _reg),
-      ts('43', _num),
-      ts(', ', _reg),
-      ts('47', _num),
-      ts(', ', _reg),
-      ts('51', _num),
-      ts(', ', _reg),
-      ts('56', _num),
-      ts(', ', _reg),
-      ts('62', _num),
-      ts(',\n', _reg),
-      ts('        ', _reg),
-      ts('68', _num),
-      ts(', ', _reg),
-      ts('75', _num),
-      ts(', ', _reg),
-      ts('82', _num),
-      ts('\n', _reg),
-      ts('    ]\n', _reg),
-      ts('    decadas = [', _reg),
-      ts('1', _num),
-      ts(', ', _reg),
-      ts('10', _num),
-      ts(', ', _reg),
-      ts('100', _num),
-      ts(', ', _reg),
-      ts('1e3', _num),
-      ts(',\n', _reg),
-      ts('               ', _reg),
-      ts('1e4', _num),
-      ts(', ', _reg),
-      ts('1e5', _num),
-      ts(', ', _reg),
-      ts('1e6', _num),
-      ts(']\n', _reg),
-      ts('    return', _kw),
-      ts(' [b*d ', _reg),
-      ts('for', _kw),
-      ts(' b ', _reg),
-      ts('in', _kw),
-      ts(' bases_e24\n', _reg),
-      ts('                  ', _reg),
-      ts('for', _kw),
-      ts(' d ', _reg),
-      ts('in', _kw),
-      ts(' decadas]\n', _reg),
-    ];
-  }
+  static const _rows = [
+    ['10', '10Ω', '100Ω', '1kΩ', '10kΩ', '100kΩ', '1MΩ', '10MΩ'],
+    ['15', '15Ω', '150Ω', '1.5kΩ', '15kΩ', '150kΩ', '1.5MΩ', '15MΩ'],
+    ['22', '22Ω', '220Ω', '2.2kΩ', '22kΩ', '220kΩ', '2.2MΩ', '22MΩ'],
+    ['33', '33Ω', '330Ω', '3.3kΩ', '33kΩ', '330kΩ', '3.3MΩ', '33MΩ'],
+    ['47', '47Ω', '470Ω', '4.7kΩ', '47kΩ', '470kΩ', '4.7MΩ', '47MΩ'],
+    ['68', '68Ω', '680Ω', '6.8kΩ', '68kΩ', '680kΩ', '6.8MΩ', '68MΩ'],
+    ['82', '82Ω', '820Ω', '8.2kΩ', '82kΩ', '820kΩ', '8.2MΩ', '82MΩ'],
+    ['...', '...', '...', '...', '...', '...', '...', '...'],
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +113,7 @@ class _Slide11State extends State<Slide11> with SingleTickerProviderStateMixin {
                     _fade(
                       titleA,
                       child: Text(
-                        'Implementação em Python',
+                        'Série E24 — Resistores Comerciais',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 28 * s,
@@ -268,9 +144,11 @@ class _Slide11State extends State<Slide11> with SingleTickerProviderStateMixin {
     );
   }
 
+  // ── Content: two columns ──────────────────────────────────────────────────
+
   Widget _buildContent(double s) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(child: _reveal(widget.step >= 1, _buildLeft(s))),
         SizedBox(width: 20 * s),
@@ -279,63 +157,204 @@ class _Slide11State extends State<Slide11> with SingleTickerProviderStateMixin {
     );
   }
 
-  // ── Left column ───────────────────────────────────────────────────────────
+  // ── Left: table ───────────────────────────────────────────────────────────
 
   Widget _buildLeft(double s) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _sectionLabel(
-          '📄 IMPORTAÇÕES & CONSTANTES',
-          const Color(0xFFFF9F0A),
-          s,
-        ),
-        SizedBox(height: 8 * s),
-        _codeBlock(_leftSpans(s), s),
+        _buildTable(s),
+        SizedBox(height: 10 * s),
+        _buildBadge(s),
       ],
     );
   }
 
-  // ── Right column ──────────────────────────────────────────────────────────
+  Widget _buildTable(double s) {
+    final borderColor = const Color(0xFF1E3854).withValues(alpha: 0.6);
+    final bs = BorderSide(color: borderColor, width: 0.8);
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(8 * s),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8 * s),
+        child: Table(
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          border: TableBorder(
+            top: bs,
+            bottom: bs,
+            left: bs,
+            right: bs,
+            horizontalInside: bs,
+            verticalInside: bs,
+            borderRadius: BorderRadius.circular(8 * s),
+          ),
+          children: [
+            // Header row
+            TableRow(
+              decoration: BoxDecoration(
+                color: const Color(0xFF2997FF).withValues(alpha: 0.15),
+              ),
+              children: _headers
+                  .map(
+                    (h) => Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6 * s,
+                        vertical: 7 * s,
+                      ),
+                      child: Text(
+                        h,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10 * s,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+            // Data rows
+            ..._rows.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final row = entry.value;
+              final bg = idx.isOdd
+                  ? const Color(0xFF0A1828).withValues(alpha: 0.5)
+                  : Colors.transparent;
+              return TableRow(
+                decoration: BoxDecoration(color: bg),
+                children: row.asMap().entries.map((cell) {
+                  final isBase = cell.key == 0;
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 4 * s,
+                      vertical: 6 * s,
+                    ),
+                    child: Text(
+                      cell.value,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: isBase ? const Color(0xFFFF9F0A) : Colors.white,
+                        fontWeight: isBase
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontSize: 10 * s,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadge(double s) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 9 * s),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFF9F0A).withValues(alpha: 0.10),
+        border: Border.all(
+          color: const Color(0xFFFF9F0A).withValues(alpha: 0.35),
+        ),
+        borderRadius: BorderRadius.circular(8 * s),
+      ),
+      child: Text(
+        'Biblioteca total: 161 resistores · Faixa: 10Ω a 82MΩ',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: const Color(0xFFFF9F0A),
+          fontSize: 11 * s,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  // ── Right: two info panels ────────────────────────────────────────────────
 
   Widget _buildRight(double s) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _sectionLabel('⚡ GERAÇÃO DE RESISTORES', const Color(0xFF2997FF), s),
-        SizedBox(height: 8 * s),
-        _codeBlock(_rightSpans(s), s),
+        _glassPanel(
+          header: 'SÉRIE E24 — COMO FUNCIONA',
+          headerColor: const Color(0xFF5AC8FA),
+          items: const [
+            '23 valores base de 10 a 82 (espaçamento logarítmico)',
+            '7 décadas de ×1 até ×1M (multiplicadores)',
+            'Total: 23 × 7 = 161 valores disponíveis para busca',
+            'Tolerância típica: ±5%',
+          ],
+          s: s,
+        ),
+        SizedBox(height: 14 * s),
+        _glassPanel(
+          header: 'POR QUE SÉRIE COMERCIAL?',
+          headerColor: const Color(0xFF5AC8FA),
+          items: const [
+            'Resistências com valores arbitrários não existem no mercado',
+            'A busca garante que o circuito pode ser montado com peças reais',
+            'Valores próximos são cobertos pela tolerância do componente',
+          ],
+          s: s,
+        ),
       ],
     );
   }
 
-  // ── Shared helpers ────────────────────────────────────────────────────────
-
-  Widget _sectionLabel(String text, Color color, double s) {
-    return Text(
-      text,
-      style: TextStyle(
-        color: color,
-        fontSize: 11 * s,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.6,
-      ),
-    );
-  }
-
-  Widget _codeBlock(List<InlineSpan> spans, double s) {
+  Widget _glassPanel({
+    required String header,
+    required Color headerColor,
+    required List<String> items,
+    required double s,
+  }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF050D1A),
+        color: const Color(0xFF0A1E38).withValues(alpha: 0.6),
         border: Border.all(
-          color: const Color(0xFF1E3854).withValues(alpha: 0.5),
+          color: const Color(0xFF1E4080).withValues(alpha: 0.3),
         ),
         borderRadius: BorderRadius.circular(12 * s),
       ),
       padding: EdgeInsets.all(16 * s),
-      child: RichText(text: TextSpan(children: spans)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            header,
+            style: TextStyle(
+              color: headerColor,
+              fontSize: 11 * s,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.8,
+            ),
+          ),
+          SizedBox(height: 10 * s),
+          ...items.map(
+            (item) => Padding(
+              padding: EdgeInsets.only(bottom: 7 * s),
+              child: Text(
+                '• $item',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11 * s,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
