@@ -43,6 +43,8 @@ class _Slide02State extends State<Slide02> with SingleTickerProviderStateMixin {
   bool _outputFullscreen = false;
   String _output = '';
   List<Uint8List> _plotImages = [];
+  final TransformationController _zoomCtrl = TransformationController();
+  double _zoomLevel = 1.0;
 
   // ── Código pré-carregado ──────────────────────────────────────────────────
   static const _sample = r'''from numpy import cos, sin, pi, arange
@@ -96,6 +98,7 @@ show()
     _entry.dispose();
     _codeCtrl.dispose();
     _outputScroll.dispose();
+    _zoomCtrl.dispose();
     _pollTimer?.cancel();
     super.dispose();
   }
@@ -558,6 +561,27 @@ show()
 
   // ── Output panel ─────────────────────────────────────────────────────────
 
+  void _zoomIn() {
+    setState(() {
+      _zoomLevel = (_zoomLevel + 0.25).clamp(0.5, 4.0);
+      _zoomCtrl.value = Matrix4.identity()..scale(_zoomLevel);
+    });
+  }
+
+  void _zoomOut() {
+    setState(() {
+      _zoomLevel = (_zoomLevel - 0.25).clamp(0.5, 4.0);
+      _zoomCtrl.value = Matrix4.identity()..scale(_zoomLevel);
+    });
+  }
+
+  void _zoomReset() {
+    setState(() {
+      _zoomLevel = 1.0;
+      _zoomCtrl.value = Matrix4.identity();
+    });
+  }
+
   Widget _buildOutput(double s) {
     final Color borderColor;
     if (!_hasOutput) {
@@ -587,6 +611,48 @@ show()
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (_hasOutput && _plotImages.isNotEmpty) ...[
+                  IconButton(
+                    icon: Icon(
+                      Icons.zoom_out_rounded,
+                      color: _zoomLevel > 0.5 ? Colors.white54 : Colors.white12,
+                      size: 15 * s,
+                    ),
+                    tooltip: 'Zoom out',
+                    onPressed: _zoomLevel > 0.5 ? _zoomOut : null,
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(
+                      minWidth: 26 * s,
+                      minHeight: 26 * s,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _zoomReset,
+                    child: Text(
+                      '${(_zoomLevel * 100).round()}%',
+                      style: TextStyle(
+                        color: Colors.white38,
+                        fontSize: 9 * s,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.zoom_in_rounded,
+                      color: _zoomLevel < 4.0 ? Colors.white54 : Colors.white12,
+                      size: 15 * s,
+                    ),
+                    tooltip: 'Zoom in',
+                    onPressed: _zoomLevel < 4.0 ? _zoomIn : null,
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(
+                      minWidth: 26 * s,
+                      minHeight: 26 * s,
+                    ),
+                  ),
+                  SizedBox(width: 4 * s),
+                ],
                 if (_hasOutput)
                   IconButton(
                     icon: Icon(
@@ -633,15 +699,60 @@ show()
             child: _hasOutput
                 ? Padding(
                     padding: EdgeInsets.all(14 * s),
-                    child: Scrollbar(
-                      controller: _outputScroll,
-                      child: SingleChildScrollView(
-                        controller: _outputScroll,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (_output.isNotEmpty)
-                              SelectableText(
+                    child: _plotImages.isNotEmpty
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_output.isNotEmpty)
+                                SelectableText(
+                                  _output,
+                                  style: TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontSize: 12 * s,
+                                    color: _hasError
+                                        ? const Color(0xFFFF9898)
+                                        : const Color(0xFF9EE09E),
+                                    height: 1.65,
+                                  ),
+                                ),
+                              if (_output.isNotEmpty) SizedBox(height: 10 * s),
+                              Expanded(
+                                child: InteractiveViewer(
+                                  transformationController: _zoomCtrl,
+                                  minScale: 0.5,
+                                  maxScale: 4.0,
+                                  onInteractionEnd: (_) {
+                                    final scale = _zoomCtrl.value
+                                        .getMaxScaleOnAxis();
+                                    if (scale != _zoomLevel) {
+                                      setState(() => _zoomLevel = scale);
+                                    }
+                                  },
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      for (final imgBytes in _plotImages)
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8 * s,
+                                          ),
+                                          child: Image.memory(
+                                            imgBytes,
+                                            fit: BoxFit.contain,
+                                            width: double.infinity,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : Scrollbar(
+                            controller: _outputScroll,
+                            child: SingleChildScrollView(
+                              controller: _outputScroll,
+                              child: SelectableText(
                                 _output,
                                 style: TextStyle(
                                   fontFamily: 'monospace',
@@ -652,21 +763,8 @@ show()
                                   height: 1.65,
                                 ),
                               ),
-                            for (final imgBytes in _plotImages) ...[
-                              SizedBox(height: 10 * s),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8 * s),
-                                child: Image.memory(
-                                  imgBytes,
-                                  fit: BoxFit.contain,
-                                  width: double.infinity,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
+                            ),
+                          ),
                   )
                 : Center(
                     child: Column(
