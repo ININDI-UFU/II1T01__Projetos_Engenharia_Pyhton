@@ -138,9 +138,14 @@ class _Slide06State extends State<Slide06> with TickerProviderStateMixin {
           width: 1,
         ),
       ),
-      child: const CustomPaint(
-        painter: _CircuitPainter(),
-        child: SizedBox.expand(),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8 * s),
+        child: Image.asset(
+          'assets/condSinal.png',
+          fit: BoxFit.contain,
+          width: double.infinity,
+          height: double.infinity,
+        ),
       ),
     );
   }
