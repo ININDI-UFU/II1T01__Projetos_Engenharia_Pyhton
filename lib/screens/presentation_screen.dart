@@ -8,6 +8,7 @@ import '../slides/slide_01.dart';
 import '../slides/slide_02.dart';
 import '../slides/slide_03.dart';
 import '../slides/slide_04.dart';
+import '../slides/slide_04b.dart';
 import '../slides/slide_05.dart';
 import '../slides/slide_06.dart';
 import '../slides/slide_07.dart';
@@ -22,7 +23,7 @@ import '../slides/slide_15.dart';
 import '../slides/slide_16.dart';
 import '../slides/slide_17.dart';
 
-const int kTotalSlides = 17;
+const int kTotalSlides = 18;
 
 // Accent colors cycling per slide
 const _kAccents = [
@@ -51,7 +52,8 @@ const _kGlowPositions = [
   Alignment.centerRight, // 13
   Alignment.bottomCenter, // 14
   Alignment.centerRight, // 15
-  Alignment.topLeft, // 16 — Slide17 (Python)
+  Alignment.topLeft, // 16
+  Alignment.bottomLeft, // 17 — Slide17 (Python)
 ];
 
 class PresentationScreen extends StatefulWidget {
@@ -68,18 +70,19 @@ int _maxSubStep(int slide) {
     // 1: 0, // Slide02 — Python interativo (sem sub-steps)
     2: 5, // Slide03 — Cadeia de Medição
     3: 3, // Slide04 — Contexto do Problema
-    4: 3, // Slide05 — Formulação do Problema
-    5: 2, // Slide06 — Esquemático
-    6: 4, // Slide07 — Derivação Matemática
-    7: 4, // Slide08 — Estratégia Computacional
-    8: 0, // Slide09 — Fluxograma
-    9: 3, // Slide10 — Arquitetura do Software
-    10: 2, // Slide11 — Série E24
-    11: 2, // Slide12 — Implementação Python
-    12: 2, // Slide13 — Funções Auxiliares
-    13: 2, // Slide14 — Busca Aleatória
-    14: 2, // Slide15 — Análise Resultados
-    15: 2, // Slide16 — Segurança Elétrica
+    4: 2, // Slide04b — Comparação V_in (±311 V) × V_out (0–5 V)
+    5: 3, // Slide05 — Formulação do Problema
+    6: 2, // Slide06 — Esquemático
+    7: 4, // Slide07 — Derivação Matemática
+    8: 4, // Slide08 — Estratégia Computacional
+    9: 0, // Slide09 — Fluxograma
+    10: 3, // Slide10 — Arquitetura do Software
+    11: 2, // Slide11 — Série E24
+    12: 2, // Slide12 — Implementação Python
+    13: 2, // Slide13 — Funções Auxiliares
+    14: 2, // Slide14 — Busca Aleatória
+    15: 2, // Slide15 — Análise Resultados
+    16: 2, // Slide16 — Segurança Elétrica
   };
   return steps[slide] ?? 0;
 }
@@ -560,19 +563,20 @@ class _SlideFrame extends StatelessWidget {
     if (slideIndex == 1) return const Slide02(); // Python interativo
     if (slideIndex == 2) return Slide03(step: subStep);
     if (slideIndex == 3) return Slide04(step: subStep);
-    if (slideIndex == 4) return Slide05(step: subStep);
-    if (slideIndex == 5) return Slide06(step: subStep);
-    if (slideIndex == 6) return Slide07(step: subStep);
-    if (slideIndex == 7) return Slide08(step: subStep);
-    if (slideIndex == 8) return Slide09(step: subStep);
-    if (slideIndex == 9) return Slide10(step: subStep);
-    if (slideIndex == 10) return Slide11(step: subStep);
-    if (slideIndex == 11) return Slide12(step: subStep);
-    if (slideIndex == 12) return Slide13(step: subStep);
-    if (slideIndex == 13) return Slide14(step: subStep);
-    if (slideIndex == 14) return Slide15(step: subStep);
-    if (slideIndex == 15) return Slide16(step: subStep);
-    if (slideIndex == 16) return const Slide17();
+    if (slideIndex == 4) return Slide04b(step: subStep);
+    if (slideIndex == 5) return Slide05(step: subStep);
+    if (slideIndex == 6) return Slide06(step: subStep);
+    if (slideIndex == 7) return Slide07(step: subStep);
+    if (slideIndex == 8) return Slide08(step: subStep);
+    if (slideIndex == 9) return Slide09(step: subStep);
+    if (slideIndex == 10) return Slide10(step: subStep);
+    if (slideIndex == 11) return Slide11(step: subStep);
+    if (slideIndex == 12) return Slide12(step: subStep);
+    if (slideIndex == 13) return Slide13(step: subStep);
+    if (slideIndex == 14) return Slide14(step: subStep);
+    if (slideIndex == 15) return Slide15(step: subStep);
+    if (slideIndex == 16) return Slide16(step: subStep);
+    if (slideIndex == 17) return const Slide17();
     final path =
         'assets/pdf_slide_${(slideIndex + 1).toString().padLeft(2, '0')}.png';
 
