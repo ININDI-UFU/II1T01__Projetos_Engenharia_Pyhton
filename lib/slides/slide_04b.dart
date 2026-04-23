@@ -365,7 +365,7 @@ class _Slide04bState extends State<Slide04b> with TickerProviderStateMixin {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: const Color(0xFFFF9F0A),
-              fontSize: 10.5 * s,
+              fontSize: 10.3 * s,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
             ),

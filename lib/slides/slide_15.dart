@@ -39,114 +39,60 @@ class _Slide15State extends State<Slide15> with TickerProviderStateMixin {
 
   // ── Animation helpers ──────────────────────────────────────────────────────
 
-  Animation<double> _iv(double a, double b) =>
-      CurvedAnimation(parent: _entry, curve: Interval(a, b, curve: Curves.easeOut));
+  Animation<double> _iv(double a, double b) => CurvedAnimation(
+    parent: _entry,
+    curve: Interval(a, b, curve: Curves.easeOut),
+  );
 
-  Widget _fade(Animation<double> anim, {double dy = 24, required Widget child}) =>
-      AnimatedBuilder(
-        animation: anim,
-        builder: (context, _) => Opacity(
-          opacity: anim.value,
-          child: Transform.translate(
-            offset: Offset(0, dy * (1 - anim.value)),
-            child: child,
-          ),
-        ),
-      );
+  Widget _fade(
+    Animation<double> anim, {
+    double dy = 24,
+    required Widget child,
+  }) => AnimatedBuilder(
+    animation: anim,
+    builder: (context, _) => Opacity(
+      opacity: anim.value,
+      child: Transform.translate(
+        offset: Offset(0, dy * (1 - anim.value)),
+        child: child,
+      ),
+    ),
+  );
 
   Widget _reveal(bool visible, Widget child) => AnimatedOpacity(
-        opacity: visible ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 420),
-        curve: Curves.easeOut,
-        child: AnimatedScale(
-          scale: visible ? 1.0 : 0.90,
-          duration: const Duration(milliseconds: 420),
-          curve: Curves.easeOutBack,
-          child: child,
-        ),
-      );
+    opacity: visible ? 1.0 : 0.0,
+    duration: const Duration(milliseconds: 420),
+    curve: Curves.easeOut,
+    child: AnimatedScale(
+      scale: visible ? 1.0 : 0.90,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutBack,
+      child: child,
+    ),
+  );
 
-  // ── Oscilloscope widget ────────────────────────────────────────────────────
+  // ── Oscilloscope widget (replaced by static image) ─────────────────────────
 
   Widget _buildOscilloscope(double s) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header bar
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 12 * s, vertical: 6 * s),
-          decoration: BoxDecoration(
-            color: const Color(0xFF001A00),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(10 * s),
-              topRight: Radius.circular(10 * s),
-            ),
-            border: Border.all(
-              color: const Color(0xFF00FF41).withValues(alpha: 0.25),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 8 * s,
-                height: 8 * s,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF00FF41),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              SizedBox(width: 8 * s),
-              Text(
-                'OSCILLOSCOPE  ·  V_out',
-                style: TextStyle(
-                  color: const Color(0xFF00FF41).withValues(alpha: 0.85),
-                  fontSize: 10 * s,
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '∿ RUNNING',
-                style: TextStyle(
-                  color: const Color(0xFF00FF41).withValues(alpha: 0.6),
-                  fontSize: 9 * s,
-                  fontFamily: 'monospace',
-                ),
-              ),
-            ],
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A1E38).withValues(alpha: 0.5),
+        border: Border.all(
+          color: const Color(0xFF00FF41).withValues(alpha: 0.3),
+          width: 1.5 * s,
         ),
-        // Screen area
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: const Color(0xFF00FF41).withValues(alpha: 0.3),
-                width: 1.5 * s,
-              ),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(10 * s),
-                bottomRight: Radius.circular(10 * s),
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(9 * s),
-                bottomRight: Radius.circular(9 * s),
-              ),
-              child: AnimatedBuilder(
-                animation: _osc,
-                builder: (context, _) => CustomPaint(
-                  painter: _OscPainter(s: s, phase: _osc.value),
-                  child: const SizedBox.expand(),
-                ),
-              ),
-            ),
-          ),
+        borderRadius: BorderRadius.circular(10 * s),
+      ),
+      padding: EdgeInsets.all(10 * s),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8 * s),
+        child: Image.asset(
+          'assets/simul.png',
+          fit: BoxFit.contain,
+          width: double.infinity,
+          height: double.infinity,
         ),
-      ],
+      ),
     );
   }
 
@@ -262,11 +208,7 @@ class _Slide15State extends State<Slide15> with TickerProviderStateMixin {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF0C1B30),
-                Color(0xFF071320),
-                Color(0xFF040D18),
-              ],
+              colors: [Color(0xFF0C1B30), Color(0xFF071320), Color(0xFF040D18)],
             ),
           ),
           child: Stack(
@@ -377,9 +319,15 @@ class _OscPainter extends CustomPainter {
       ..color = const Color(0xFF00FF41).withValues(alpha: 0.18)
       ..strokeWidth = 0.8 * s;
     canvas.drawLine(
-        Offset(0, size.height / 2), Offset(size.width, size.height / 2), centerPaint);
+      Offset(0, size.height / 2),
+      Offset(size.width, size.height / 2),
+      centerPaint,
+    );
     canvas.drawLine(
-        Offset(size.width / 2, 0), Offset(size.width / 2, size.height), centerPaint);
+      Offset(size.width / 2, 0),
+      Offset(size.width / 2, size.height),
+      centerPaint,
+    );
 
     // Tick marks on center lines (every 1/50 of width/height)
     final tickPaint = Paint()
@@ -388,12 +336,18 @@ class _OscPainter extends CustomPainter {
     for (int i = 0; i <= 50; i++) {
       final x = (i / 50) * size.width;
       canvas.drawLine(
-          Offset(x, size.height / 2 - 3 * s), Offset(x, size.height / 2 + 3 * s), tickPaint);
+        Offset(x, size.height / 2 - 3 * s),
+        Offset(x, size.height / 2 + 3 * s),
+        tickPaint,
+      );
     }
     for (int i = 0; i <= 50; i++) {
       final y = (i / 50) * size.height;
       canvas.drawLine(
-          Offset(size.width / 2 - 3 * s, y), Offset(size.width / 2 + 3 * s, y), tickPaint);
+        Offset(size.width / 2 - 3 * s, y),
+        Offset(size.width / 2 + 3 * s, y),
+        tickPaint,
+      );
     }
 
     // ── Scrolling sine wave ──────────────────────────────────────────────────
@@ -482,17 +436,16 @@ class _OscPainter extends CustomPainter {
       color: const Color(0xFF00FF41).withValues(alpha: 0.6),
       fontFamily: 'monospace',
     );
-    const trigLabels = [
-      'CH1  AC  2.5V/div',
-      'TIME  10ms/div',
-      'TRIG  AUTO',
-    ];
+    const trigLabels = ['CH1  AC  2.5V/div', 'TIME  10ms/div', 'TRIG  AUTO'];
     for (int i = 0; i < trigLabels.length; i++) {
       final tp = TextPainter(
         text: TextSpan(text: trigLabels[i], style: trigStyle),
         textDirection: TextDirection.ltr,
       )..layout();
-      tp.paint(canvas, Offset(size.width - tp.width - 6 * s, 6 * s + i * (10 * s)));
+      tp.paint(
+        canvas,
+        Offset(size.width - tp.width - 6 * s, 6 * s + i * (10 * s)),
+      );
     }
   }
 

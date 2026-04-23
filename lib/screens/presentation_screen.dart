@@ -209,8 +209,7 @@ class _PresentationScreenState extends State<PresentationScreen>
     if (e is! KeyDownEvent) return KeyEventResult.ignored;
     final k = e.logicalKey;
     if (k == LogicalKeyboardKey.arrowRight ||
-        k == LogicalKeyboardKey.arrowDown ||
-        k == LogicalKeyboardKey.space) {
+        k == LogicalKeyboardKey.arrowDown) {
       _handleNext();
       return KeyEventResult.handled;
     }
